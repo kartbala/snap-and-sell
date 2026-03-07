@@ -96,6 +96,36 @@ export default function OfferModal({ listing, onClose }) {
             </div>
             <h3>{RESULT_TITLES[result.decision]}</h3>
             <p>{result.message}</p>
+
+            {/* Meeting spot suggestion for accepted offers */}
+            {result.decision === "accepted" && result.meeting_spot && (
+              <div
+                style={{
+                  marginTop: "var(--space-lg)",
+                  padding: "var(--space-md)",
+                  background: "rgba(78, 205, 196, 0.1)",
+                  border: "1px solid rgba(78, 205, 196, 0.3)",
+                  borderRadius: "var(--radius-md)",
+                  textAlign: "left",
+                }}
+              >
+                <p style={{ fontWeight: 700, color: "var(--accent-teal)", marginBottom: "var(--space-xs)", fontSize: "var(--text-base)" }}>
+                  Suggested Meeting Spot
+                </p>
+                <p style={{ fontWeight: 600, marginBottom: 4, fontSize: "var(--text-base)" }}>
+                  {result.meeting_spot.name}
+                </p>
+                <p style={{ color: "var(--text-secondary)", fontSize: "var(--text-sm)", marginBottom: 4 }}>
+                  {result.meeting_spot.address}
+                </p>
+                {result.meeting_spot.notes && (
+                  <p style={{ color: "var(--text-muted)", fontSize: "var(--text-sm)", fontStyle: "italic" }}>
+                    {result.meeting_spot.notes}
+                  </p>
+                )}
+              </div>
+            )}
+
             <button
               className="btn btn-ghost"
               onClick={onClose}

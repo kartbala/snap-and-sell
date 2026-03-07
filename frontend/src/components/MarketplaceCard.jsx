@@ -78,18 +78,32 @@ export default function MarketplaceCard({ listing, onMakeOffer, animationDelay =
         </div>
       </div>
 
-      {/* Tap hint */}
+      {/* Bottom bar: expiry + tap hint */}
       <div
         style={{
           marginTop: "var(--space-md)",
           textAlign: "center",
-          color: "var(--text-muted)",
-          fontSize: "var(--text-sm)",
           borderTop: "1px solid rgba(255,255,255,0.06)",
           paddingTop: "var(--space-sm)",
         }}
       >
-        Tap to make an offer
+        {listing.days_remaining != null && (
+          <p
+            style={{
+              fontSize: "14px",
+              color: listing.days_remaining <= 5 ? "var(--accent-coral)" : "var(--text-muted)",
+              fontWeight: listing.days_remaining <= 5 ? 700 : 400,
+              marginBottom: 4,
+            }}
+          >
+            {listing.days_remaining <= 5
+              ? `Only ${listing.days_remaining} day${listing.days_remaining !== 1 ? "s" : ""} left!`
+              : `${listing.days_remaining} days remaining`}
+          </p>
+        )}
+        <p style={{ color: "var(--text-muted)", fontSize: "var(--text-sm)" }}>
+          Tap to make an offer
+        </p>
       </div>
     </div>
   );

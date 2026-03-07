@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from functools import lru_cache
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from backend.database import init_db, DEFAULT_DB_PATH
 from backend import models
+from backend.meeting_spots import get_all_spots, suggest_spot, spot_to_dict
+
+LISTING_EXPIRY_DAYS = 30
 
 
 @lru_cache
@@ -90,17 +94,43 @@ def batch_approve(req: BatchApproveRequest):
     return {"updated": count}
 
 
-# --- Marketplace (public, no min_price) ---
+# --- Marketplace (public, no min_price, excludes expired) ---
+
+def _days_remaining(created_at: str) -> int:
+    """Calculate days remaining before a listing expires."""
+    try:
+        created = datetime.fromisoformat(created_at)
+    except ValueError:
+        created = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+    expiry = created + timedelta(days=LISTING_EXPIRY_DAYS)
+    remaining = (expiry - datetime.now()).days
+    return max(remaining, 0)
+
 
 @app.get("/api/marketplace")
 def marketplace():
     listings = models.list_listings(status="active", db_path=_get_db_path())
+    cutoff = datetime.now() - timedelta(days=LISTING_EXPIRY_DAYS)
     result = []
     for listing in listings:
+        try:
+            created = datetime.fromisoformat(listing.created_at)
+        except ValueError:
+            created = datetime.strptime(listing.created_at, "%Y-%m-%d %H:%M:%S")
+        if created < cutoff:
+            continue
         d = listing.model_dump()
         d.pop("min_price", None)
+        d["days_remaining"] = _days_remaining(listing.created_at)
         result.append(d)
     return result
+
+
+# --- Meeting Spots ---
+
+@app.get("/api/meeting-spots")
+def meeting_spots():
+    return [spot_to_dict(s) for s in get_all_spots()]
 
 
 # --- Offers ---
@@ -116,12 +146,16 @@ def create_offer(data: models.OfferCreate):
     oid = models.create_offer(data, _get_db_path())
     result = evaluate_offer(data.offer_amount, listing.asking_price, listing.min_price)
     models.update_offer_status(oid, result.decision, result.message, _get_db_path())
-    return {
+    response = {
         "offer_id": oid,
         "decision": result.decision,
         "message": result.message,
         "counter_amount": result.counter_amount,
     }
+    if result.decision == "accepted":
+        spot = suggest_spot(neighborhood=listing.location)
+        response["meeting_spot"] = spot_to_dict(spot)
+    return response
 
 
 @app.get("/api/listings/{lid}/offers")
