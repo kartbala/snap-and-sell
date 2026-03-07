@@ -38,7 +38,8 @@ def evaluate_offer(
             message="Your offer has been submitted for review. The seller will respond soon.",
         )
 
-    return NegotiationResult(
-        decision="rejected",
-        message=f"Offer too low. The asking price is ${asking_price:,.2f}.",
-    )
+    if asking_price is not None:
+        msg = f"Offer too low. The asking price is ${asking_price:,.2f}."
+    else:
+        msg = f"Offer too low. The minimum accepted is ${min_price:,.2f}."
+    return NegotiationResult(decision="rejected", message=msg)
