@@ -1,0 +1,132 @@
+from __future__ import annotations
+import os
+from contextlib import asynccontextmanager
+from functools import lru_cache
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from backend.database import init_db, DEFAULT_DB_PATH
+from backend import models
+
+
+@lru_cache
+def _get_db_path() -> str:
+    return os.environ.get("DB_PATH", DEFAULT_DB_PATH)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db(_get_db_path())
+    yield
+
+
+app = FastAPI(title="Snap & Sell", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+photos_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "photos")
+if os.path.isdir(photos_dir):
+    app.mount("/photos", StaticFiles(directory=photos_dir), name="photos")
+
+
+# --- Health ---
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+
+# --- Listings ---
+
+@app.post("/api/listings", status_code=201)
+def create_listing(data: models.ListingCreate):
+    lid = models.create_listing(data, _get_db_path())
+    listing = models.get_listing(lid, _get_db_path())
+    return {"id": lid, "status": listing.status}
+
+
+@app.get("/api/listings")
+def list_listings(status: str | None = None):
+    return models.list_listings(status=status, db_path=_get_db_path())
+
+
+@app.get("/api/listings/{lid}")
+def get_listing(lid: int):
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return listing
+
+
+@app.put("/api/listings/{lid}")
+def update_listing(lid: int, data: models.ListingUpdate):
+    ok = models.update_listing(lid, data, _get_db_path())
+    if not ok:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return {"message": "updated"}
+
+
+@app.delete("/api/listings/{lid}")
+def delete_listing(lid: int):
+    ok = models.delete_listing(lid, _get_db_path())
+    if not ok:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return {"message": "deleted"}
+
+
+class BatchApproveRequest(BaseModel):
+    ids: list[int]
+
+
+@app.post("/api/listings/batch-approve")
+def batch_approve(req: BatchApproveRequest):
+    count = models.batch_update_status(req.ids, "active", _get_db_path())
+    return {"updated": count}
+
+
+# --- Marketplace (public, no min_price) ---
+
+@app.get("/api/marketplace")
+def marketplace():
+    listings = models.list_listings(status="active", db_path=_get_db_path())
+    result = []
+    for listing in listings:
+        d = listing.model_dump()
+        d.pop("min_price", None)
+        result.append(d)
+    return result
+
+
+# --- Offers ---
+
+@app.post("/api/offers", status_code=201)
+def create_offer(data: models.OfferCreate):
+    from backend.negotiation import evaluate_offer
+
+    listing = models.get_listing(data.listing_id, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    oid = models.create_offer(data, _get_db_path())
+    result = evaluate_offer(data.offer_amount, listing.asking_price, listing.min_price)
+    models.update_offer_status(oid, result.decision, result.message, _get_db_path())
+    return {
+        "offer_id": oid,
+        "decision": result.decision,
+        "message": result.message,
+        "counter_amount": result.counter_amount,
+    }
+
+
+@app.get("/api/listings/{lid}/offers")
+def list_offers(lid: int):
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return models.list_offers(listing_id=lid, db_path=_get_db_path())
