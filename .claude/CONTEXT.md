@@ -19,10 +19,11 @@ snap-and-sell/
 ├── backend/
 │   ├── database.py      # SQLite schema (listings, photos, offers)
 │   ├── models.py        # Pydantic models + CRUD
-│   ├── api.py           # FastAPI (10 endpoints, port 5001)
+│   ├── api.py           # FastAPI (12 endpoints, port 5001)
 │   ├── negotiation.py   # Rule-based offer engine
 │   ├── intake.py        # Gemini text parser + price heuristics
-│   └── tests/           # 200 tests across 12 files
+│   ├── meeting_spots.py # 15 DC safe exchange locations
+│   └── tests/           # 231 tests across 14 files
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
@@ -50,9 +51,10 @@ snap-and-sell/
 | PUT | /api/listings/{id} | Update |
 | DELETE | /api/listings/{id} | Delete |
 | POST | /api/listings/batch-approve | Approve drafts -> active |
-| GET | /api/marketplace | Active only, NO min_price |
-| POST | /api/offers | Submit offer (auto-negotiation) |
+| GET | /api/marketplace | Active only, NO min_price, excludes >30 days, includes days_remaining |
+| POST | /api/offers | Submit offer (auto-negotiation, accepted includes meeting_spot) |
 | GET | /api/listings/{id}/offers | Offers for listing |
+| GET | /api/meeting-spots | All 15 DC safe exchange locations |
 
 ## Negotiation Rules
 - offer >= asking_price → accepted
@@ -64,12 +66,13 @@ snap-and-sell/
 ## Intake Parser
 Parses Gemini numbered bold-item format. Depreciation: electronics 55%, furniture 35%, fitness 40%, audio 50%. Min price = 70% of asking.
 
-## Test Coverage: 200 tests
+## Test Coverage: 231 tests
 - test_database.py (10), test_models.py (17), test_models_edge_cases.py (27)
 - test_api.py (15), test_api_edge_cases.py (28), test_api_lifecycle.py (19)
 - test_negotiation.py (13), test_negotiation_edge_cases.py (33)
 - test_intake.py (14), test_intake_edge_cases.py (22)
 - test_integration.py (3), test_e2e_scenarios.py (19)
+- test_meeting_spots.py (17), test_expiration.py (14)
 
 ## Bugs Found & Fixed
 1. negotiation.py: TypeError crash when asking_price=None with min_price set (fixed)
@@ -83,13 +86,15 @@ Parses Gemini numbered bold-item format. Depreciation: electronics 55%, furnitur
 5. For each: download photo, Perplexity price comps, POST /api/listings
 6. Report draft count
 
-## Next Improvements (from competitive research)
+## Implemented Improvements
+1. **Meeting spot suggestion** — 15 curated DC safe exchange locations (police stations, libraries, metro stations, public places). Accepted offers automatically include a suggested meeting spot.
+2. **Listing expiration** — marketplace auto-hides listings >30 days old. Each marketplace listing includes `days_remaining`. Urgency styling when <=5 days left. Sellers still see expired items in dashboard.
+
+## Remaining Improvements (from competitive research)
 1. **SMS notifications via Google Voice** — text Karthik on new offers, text buyer on accept with pickup details
-2. **Meeting spot suggestion** — safe public places in DC for exchanges
-3. **Listing expiration** — auto-archive after 30 days
-4. **Price comparison display** — Perplexity-sourced comps visible on listing
-5. **Share links** — Rebrandly short URLs for posting on Nextdoor/FB groups
-6. **Chat/messaging** — in-app or SMS-based buyer-seller communication
+2. **Price comparison display** — Perplexity-sourced comps visible on listing
+3. **Share links** — Rebrandly short URLs for posting on Nextdoor/FB groups
+4. **Chat/messaging** — in-app or SMS-based buyer-seller communication
 
 ## Key Competitive Insight
 Strongest differentiator: AI-powered intake (no competitor auto-scans photos + finds receipts + auto-prices). Instant negotiation also unique — removes tedious back-and-forth.
