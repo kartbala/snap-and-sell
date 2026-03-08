@@ -196,6 +196,28 @@ def mark_notification_sent(nid: int):
     return {"message": "marked as sent"}
 
 
+# --- Share Links ---
+
+@app.post("/api/listings/{lid}/share")
+def share_listing(lid: int):
+    from backend.share import create_short_link
+
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    # Return existing share URL if already generated
+    if listing.share_url:
+        return {"share_url": listing.share_url}
+
+    url = create_short_link(listing.title, lid)
+    if url is None:
+        raise HTTPException(status_code=502, detail="Rebrandly API failed to create link")
+
+    models.update_listing(lid, models.ListingUpdate(share_url=url), _get_db_path())
+    return {"share_url": url}
+
+
 @app.get("/api/listings/{lid}/offers")
 def list_offers(lid: int):
     listing = models.get_listing(lid, _get_db_path())
