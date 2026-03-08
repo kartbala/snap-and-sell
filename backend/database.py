@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS listings (
     purchase_source TEXT,
     status TEXT NOT NULL DEFAULT 'draft',
     location TEXT,
+    price_comps TEXT,
+    share_url TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -43,6 +45,17 @@ CREATE TABLE IF NOT EXISTS offers (
     response_message TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id INTEGER NOT NULL,
+    offer_id INTEGER NOT NULL,
+    type TEXT NOT NULL DEFAULT 'new_offer',
+    sent INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
+    FOREIGN KEY (offer_id) REFERENCES offers(id) ON DELETE CASCADE
 );
 """
 
