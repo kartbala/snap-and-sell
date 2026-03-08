@@ -79,6 +79,15 @@ class PhotoResponse(BaseModel):
     is_primary: bool
 
 
+class NotificationResponse(BaseModel):
+    id: int
+    listing_id: int
+    offer_id: int
+    type: str
+    sent: bool
+    created_at: str
+
+
 # --- CRUD functions ---
 
 def create_listing(data: ListingCreate, db_path: str = DEFAULT_DB_PATH) -> int:
@@ -242,3 +251,48 @@ def get_photos(
     ).fetchall()
     conn.close()
     return [PhotoResponse(**{**dict(r), "is_primary": bool(r["is_primary"])}) for r in rows]
+
+
+def create_notification(
+    listing_id: int, offer_id: int, notif_type: str = "new_offer",
+    db_path: str = DEFAULT_DB_PATH,
+) -> int:
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "INSERT INTO notifications (listing_id, offer_id, type) VALUES (?, ?, ?)",
+        (listing_id, offer_id, notif_type),
+    )
+    conn.commit()
+    nid = cursor.lastrowid
+    conn.close()
+    return nid
+
+
+def list_notifications(
+    sent: bool | None = None, db_path: str = DEFAULT_DB_PATH
+) -> list[NotificationResponse]:
+    conn = get_connection(db_path)
+    if sent is not None:
+        rows = conn.execute(
+            "SELECT * FROM notifications WHERE sent = ? ORDER BY created_at DESC",
+            (int(sent),),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM notifications ORDER BY created_at DESC"
+        ).fetchall()
+    conn.close()
+    return [NotificationResponse(**{**dict(r), "sent": bool(r["sent"])}) for r in rows]
+
+
+def mark_notification_sent(
+    nid: int, db_path: str = DEFAULT_DB_PATH
+) -> bool:
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "UPDATE notifications SET sent = 1 WHERE id = ?", (nid,)
+    )
+    conn.commit()
+    changed = cursor.rowcount > 0
+    conn.close()
+    return changed
