@@ -242,6 +242,35 @@ export default function ListingCard({
           )}
         </div>
       )}
+
+      {/* Price Comparisons */}
+      {listing.price_comps && (() => {
+        try {
+          const comps = JSON.parse(listing.price_comps);
+          if (comps.length === 0) return null;
+          return (
+            <div
+              style={{
+                marginTop: "var(--space-md)",
+                padding: "var(--space-sm) var(--space-md)",
+                background: "rgba(78, 205, 196, 0.08)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "var(--text-sm)",
+              }}
+            >
+              <p style={{ color: "var(--accent-teal)", fontWeight: 700, marginBottom: 4 }}>
+                Price Comps
+              </p>
+              {comps.map((c, i) => (
+                <p key={i} style={{ color: "var(--text-secondary)", marginBottom: 2 }}>
+                  {c.source}: ${Number(c.price).toFixed(0)}
+                  {c.note && <span style={{ color: "var(--text-muted)" }}> ({c.note})</span>}
+                </p>
+              ))}
+            </div>
+          );
+        } catch { return null; }
+      })()}
     </div>
   );
 }

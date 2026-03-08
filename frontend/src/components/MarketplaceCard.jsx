@@ -52,6 +52,25 @@ export default function MarketplaceCard({ listing, onMakeOffer, animationDelay =
           </p>
         )}
 
+        {listing.price_comps && (() => {
+          try {
+            const comps = JSON.parse(listing.price_comps);
+            if (comps.length === 0) return null;
+            const prices = comps.map(c => c.price).filter(Boolean);
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            return (
+              <p style={{
+                fontSize: "14px",
+                color: "var(--text-muted)",
+                marginBottom: "var(--space-sm)",
+              }}>
+                Similar: ${min.toFixed(0)}&ndash;${max.toFixed(0)}
+              </p>
+            );
+          } catch { return null; }
+        })()}
+
         {/* Bottom row: price + condition */}
         <div
           style={{
