@@ -10,6 +10,31 @@ export default function ListingCard({
 }) {
   const [editing, setEditing] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [shareUrl, setShareUrl] = useState(listing.share_url || null);
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    if (shareUrl) {
+      navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      return;
+    }
+    setSharing(true);
+    try {
+      const res = await fetch(`/api/listings/${listing.id}/share`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setShareUrl(data.share_url);
+        navigator.clipboard.writeText(data.share_url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {}
+    setSharing(false);
+  };
 
   const startEdit = (field, value) => {
     setEditing(field);
@@ -271,6 +296,20 @@ export default function ListingCard({
           );
         } catch { return null; }
       })()}
+
+      {/* Share Link */}
+      {listing.status === "active" && (
+        <div style={{ marginTop: "var(--space-md)" }}>
+          <button
+            className="btn btn-ghost"
+            onClick={handleShare}
+            disabled={sharing}
+            style={{ width: "100%", fontSize: "var(--text-sm)" }}
+          >
+            {copied ? "Copied!" : sharing ? "Creating link..." : shareUrl ? `Share: ${shareUrl}` : "Generate Share Link"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
