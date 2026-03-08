@@ -146,6 +146,7 @@ def create_offer(data: models.OfferCreate):
     oid = models.create_offer(data, _get_db_path())
     result = evaluate_offer(data.offer_amount, listing.asking_price, listing.min_price)
     models.update_offer_status(oid, result.decision, result.message, _get_db_path())
+    models.create_notification(data.listing_id, oid, "new_offer", _get_db_path())
     response = {
         "offer_id": oid,
         "decision": result.decision,
@@ -156,6 +157,43 @@ def create_offer(data: models.OfferCreate):
         spot = suggest_spot(neighborhood=listing.location)
         response["meeting_spot"] = spot_to_dict(spot)
     return response
+
+
+# --- Notifications ---
+
+@app.get("/api/notifications")
+def list_notifications(sent: bool | None = None):
+    notifs = models.list_notifications(sent=sent, db_path=_get_db_path())
+    result = []
+    for n in notifs:
+        d = n.model_dump()
+        # Enrich with listing and offer context
+        listing = models.get_listing(n.listing_id, _get_db_path())
+        offers = models.list_offers(listing_id=n.listing_id, db_path=_get_db_path())
+        offer = next((o for o in offers if o.id == n.offer_id), None)
+        d["listing_title"] = listing.title if listing else None
+        d["listing_asking_price"] = listing.asking_price if listing else None
+        if offer:
+            d["buyer_name"] = offer.buyer_name
+            d["buyer_phone"] = offer.buyer_phone
+            d["offer_amount"] = offer.offer_amount
+            d["decision"] = offer.status
+        result.append(d)
+    return result
+
+
+@app.get("/api/notifications/count")
+def notification_count():
+    pending = models.list_notifications(sent=False, db_path=_get_db_path())
+    return {"unsent": len(pending)}
+
+
+@app.put("/api/notifications/{nid}")
+def mark_notification_sent(nid: int):
+    ok = models.mark_notification_sent(nid, _get_db_path())
+    if not ok:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "marked as sent"}
 
 
 @app.get("/api/listings/{lid}/offers")
