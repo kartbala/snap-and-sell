@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [allListings, setAllListings] = useState([]);
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [notifCount, setNotifCount] = useState(0);
 
   const fetchListings = useCallback(async () => {
     try {
@@ -28,6 +29,19 @@ export default function Dashboard() {
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
+
+  useEffect(() => {
+    const loadNotifs = async () => {
+      try {
+        const res = await fetch("/api/notifications/count");
+        if (res.ok) {
+          const data = await res.json();
+          setNotifCount(data.unsent);
+        }
+      } catch {}
+    };
+    loadNotifs();
+  }, [allListings]);
 
   useEffect(() => {
     setListings(allListings.filter((l) => l.status === activeTab));
@@ -99,6 +113,22 @@ export default function Dashboard() {
       <div className="page-header animate-in">
         <h1>My Listings</h1>
         <p className="subtitle">Review, edit, and approve items for sale</p>
+        {notifCount > 0 && (
+          <div
+            style={{
+              marginTop: "var(--space-sm)",
+              padding: "var(--space-sm) var(--space-md)",
+              background: "rgba(233, 69, 96, 0.15)",
+              border: "1px solid rgba(233, 69, 96, 0.3)",
+              borderRadius: "var(--radius-md)",
+              color: "var(--accent-coral)",
+              fontWeight: 700,
+              fontSize: "var(--text-base)",
+            }}
+          >
+            {notifCount} new offer{notifCount !== 1 ? "s" : ""} — check your email or run notifications
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
