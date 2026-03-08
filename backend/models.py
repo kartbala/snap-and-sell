@@ -17,6 +17,8 @@ class ListingCreate(BaseModel):
     purchase_date: str | None = None
     purchase_source: str | None = None
     location: str | None = None
+    price_comps: str | None = None
+    share_url: str | None = None
 
 
 class ListingUpdate(BaseModel):
@@ -31,6 +33,8 @@ class ListingUpdate(BaseModel):
     purchase_source: str | None = None
     status: str | None = None
     location: str | None = None
+    price_comps: str | None = None
+    share_url: str | None = None
 
 
 class ListingResponse(BaseModel):
@@ -46,6 +50,8 @@ class ListingResponse(BaseModel):
     purchase_source: str | None = None
     status: str
     location: str | None = None
+    price_comps: str | None = None
+    share_url: str | None = None
     created_at: str
     updated_at: str
 
@@ -95,11 +101,12 @@ def create_listing(data: ListingCreate, db_path: str = DEFAULT_DB_PATH) -> int:
     cursor = conn.execute(
         """INSERT INTO listings (title, description, category, condition,
            asking_price, min_price, original_price, purchase_date,
-           purchase_source, location)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           purchase_source, location, price_comps, share_url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (data.title, data.description, data.category, data.condition,
          data.asking_price, data.min_price, data.original_price,
-         data.purchase_date, data.purchase_source, data.location),
+         data.purchase_date, data.purchase_source, data.location,
+         data.price_comps, data.share_url),
     )
     conn.commit()
     lid = cursor.lastrowid
