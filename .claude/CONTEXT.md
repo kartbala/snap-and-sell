@@ -17,13 +17,14 @@ https://github.com/kartbala/snap-and-sell
 ```
 snap-and-sell/
 ├── backend/
-│   ├── database.py      # SQLite schema (listings, photos, offers)
-│   ├── models.py        # Pydantic models + CRUD
-│   ├── api.py           # FastAPI (12 endpoints, port 5001)
+│   ├── database.py      # SQLite schema (listings, photos, offers, notifications)
+│   ├── models.py        # Pydantic models + CRUD (inc. notifications)
+│   ├── api.py           # FastAPI (18 endpoints, port 5001)
 │   ├── negotiation.py   # Rule-based offer engine
 │   ├── intake.py        # Gemini text parser + price heuristics
 │   ├── meeting_spots.py # 15 DC safe exchange locations
-│   └── tests/           # 231 tests across 14 files
+│   ├── share.py         # Rebrandly short link generation
+│   └── tests/           # 276 tests across 18 files
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
@@ -55,6 +56,10 @@ snap-and-sell/
 | POST | /api/offers | Submit offer (auto-negotiation, accepted includes meeting_spot) |
 | GET | /api/listings/{id}/offers | Offers for listing |
 | GET | /api/meeting-spots | All 15 DC safe exchange locations |
+| GET | /api/notifications?sent= | List notifications (filter by sent) |
+| GET | /api/notifications/count | Unsent notification count |
+| PUT | /api/notifications/{id} | Mark notification as sent |
+| POST | /api/listings/{id}/share | Generate Rebrandly short link |
 
 ## Negotiation Rules
 - offer >= asking_price → accepted
@@ -66,13 +71,15 @@ snap-and-sell/
 ## Intake Parser
 Parses Gemini numbered bold-item format. Depreciation: electronics 55%, furniture 35%, fitness 40%, audio 50%. Min price = 70% of asking.
 
-## Test Coverage: 231 tests
+## Test Coverage: 276 tests
 - test_database.py (10), test_models.py (17), test_models_edge_cases.py (27)
 - test_api.py (15), test_api_edge_cases.py (28), test_api_lifecycle.py (19)
 - test_negotiation.py (13), test_negotiation_edge_cases.py (33)
 - test_intake.py (14), test_intake_edge_cases.py (22)
 - test_integration.py (3), test_e2e_scenarios.py (19)
 - test_meeting_spots.py (17), test_expiration.py (14)
+- test_schema_migration.py (7), test_notifications.py (10)
+- test_notifications_api.py (9), test_price_comps.py (7), test_share.py (12)
 
 ## Bugs Found & Fixed
 1. negotiation.py: TypeError crash when asking_price=None with min_price set (fixed)
@@ -89,12 +96,13 @@ Parses Gemini numbered bold-item format. Depreciation: electronics 55%, furnitur
 ## Implemented Improvements
 1. **Meeting spot suggestion** — 15 curated DC safe exchange locations (police stations, libraries, metro stations, public places). Accepted offers automatically include a suggested meeting spot.
 2. **Listing expiration** — marketplace auto-hides listings >30 days old. Each marketplace listing includes `days_remaining`. Urgency styling when <=5 days left. Sellers still see expired items in dashboard.
+3. **Offer notifications** — new offers auto-create notifications. Dashboard shows unsent count badge. API supports list/filter/mark-sent. Enriched with listing title, buyer name, offer amount, decision.
+4. **Price comparison display** — `price_comps` JSON column on listings. Dashboard shows full breakdown (source, price, note). Marketplace shows range summary ("Similar: $425–$500"). Stored during intake.
+5. **Share links** — Rebrandly short links on `karthik.link` domain. One-click generate from active listing cards. Idempotent (returns existing link on re-click). Copies to clipboard. `REBRANDLY_API_KEY` required in `.env`.
 
 ## Remaining Improvements (from competitive research)
 1. **SMS notifications via Google Voice** — text Karthik on new offers, text buyer on accept with pickup details
-2. **Price comparison display** — Perplexity-sourced comps visible on listing
-3. **Share links** — Rebrandly short URLs for posting on Nextdoor/FB groups
-4. **Chat/messaging** — in-app or SMS-based buyer-seller communication
+2. **Chat/messaging** — in-app or SMS-based buyer-seller communication
 
 ## Key Competitive Insight
 Strongest differentiator: AI-powered intake (no competitor auto-scans photos + finds receipts + auto-prices). Instant negotiation also unique — removes tedious back-and-forth.
