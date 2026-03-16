@@ -3,7 +3,9 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, date
 from functools import lru_cache
-from fastapi import FastAPI, HTTPException
+import shutil
+import uuid
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -141,6 +143,8 @@ def marketplace():
             pricing_strategy=listing.pricing_strategy or "aggressive",
             deadline=date.fromisoformat(listing.deadline) if listing.deadline else today,
         )
+        photos = models.get_photos(listing.id, _get_db_path())
+        d["photos"] = [f"/photos/{p.file_path}" for p in photos]
         result.append(d)
     return result
 
@@ -251,6 +255,42 @@ def list_offers(lid: int):
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing not found")
     return models.list_offers(listing_id=lid, db_path=_get_db_path())
+
+
+# --- Photos ---
+
+@app.post("/api/listings/{lid}/photos", status_code=201)
+def upload_photo(lid: int, file: UploadFile):
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    # Ensure photos directory exists
+    photos_base = os.path.join(os.path.dirname(os.path.dirname(__file__)), "photos")
+    os.makedirs(photos_base, exist_ok=True)
+
+    # Save file with unique name
+    ext = os.path.splitext(file.filename or "photo.jpg")[1] or ".jpg"
+    filename = f"{lid}_{uuid.uuid4().hex[:8]}{ext}"
+    file_path = os.path.join(photos_base, filename)
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    # Check if this is the first photo (make it primary)
+    existing = models.get_photos(lid, _get_db_path())
+    is_primary = len(existing) == 0
+
+    photo_id = models.add_photo(lid, filename, is_primary, _get_db_path())
+    return {"id": photo_id, "file_path": filename, "url": f"/photos/{filename}"}
+
+
+@app.get("/api/listings/{lid}/photos")
+def list_photos(lid: int):
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    photos = models.get_photos(lid, _get_db_path())
+    return [{"id": p.id, "url": f"/photos/{p.file_path}", "is_primary": p.is_primary} for p in photos]
 
 
 # --- External Posts ---
