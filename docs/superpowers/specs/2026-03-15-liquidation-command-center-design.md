@@ -20,11 +20,17 @@ Data model stays SQLite. Single seller, personal tool.
 
 ## 2. Countdown Auto-Pricing
 
-### New fields on listings
+### Schema changes
 
-- `deadline` — date, defaults to 2026-06-01, overridable per item
-- `pricing_strategy` — enum: `hold`, `aggressive` (default), `fire_sale`
-- `current_price` — computed field, never stored. Derived from `asking_price` + strategy + days remaining.
+New columns on `listings` table (via `ALTER TABLE ADD COLUMN` with defaults, preserving existing data):
+
+- `deadline TEXT DEFAULT '2026-06-01'` — overridable per item
+- `pricing_strategy TEXT DEFAULT 'aggressive'` — enum: `hold`, `aggressive`, `fire_sale`
+- `pickup_type TEXT DEFAULT 'meeting_spot'` — enum: `home`, `meeting_spot`
+
+**Replaces the existing 30-day rolling expiration model.** The `LISTING_EXPIRY_DAYS` constant and `created_at`-based filtering in `/api/marketplace` are removed. Expiration is now `deadline`-based. The `_days_remaining()` helper changes to `deadline - now()`. Tests in `test_expiration.py` will be rewritten for the deadline model.
+
+`current_price` is computed at query time, never stored. Derived from `asking_price` + strategy + days remaining.
 
 ### Drop schedules
 
@@ -46,10 +52,10 @@ Data model stays SQLite. Single seller, personal tool.
 
 ### Behavior
 
-- `asking_price` is immutable (original price preserved)
+- `asking_price` is not programmatically modified by the countdown engine (original price preserved for reference). Seller can still manually edit it via the dashboard.
 - Marketplace API returns `current_price` computed at query time
-- Negotiation engine uses `current_price` as the new reference point
-- `min_price` still respected — drops never go below it
+- Negotiation engine: API layer computes `current_price` and passes it as `asking_price` to `evaluate_offer()`. Rejection messages show the current (discounted) price, not the original. A separate `original_price` field is included in listing responses for display.
+- `min_price` still respected — drops never go below it. If `current_price` drops to `min_price`, any offer at or above that amount is auto-accepted.
 
 ## 3. Cross-Posting Engine
 
@@ -63,13 +69,21 @@ Data model stays SQLite. Single seller, personal tool.
 
 ### Data model
 
-New `external_posts` JSON column on listings:
-```json
-[
-  {"platform": "craigslist", "url": "https://...", "posted_at": "2026-04-01", "status": "active"},
-  {"platform": "facebook", "url": "https://...", "posted_at": "2026-04-01", "status": "active"}
-]
+New `external_posts` table (normalized, consistent with existing `photos`, `offers`, `notifications` tables):
+
+```sql
+CREATE TABLE external_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id INTEGER NOT NULL REFERENCES listings(id),
+    platform TEXT NOT NULL,  -- 'craigslist' or 'facebook'
+    url TEXT,
+    posted_at TEXT DEFAULT (datetime('now')),
+    status TEXT DEFAULT 'active',  -- 'active', 'price_stale', 'pending_removal', 'removed'
+    last_price_posted REAL
+);
 ```
+
+This makes queries like "find all stale Craigslist posts" straightforward without JSON parsing.
 
 ### Platform specifics
 
@@ -102,16 +116,19 @@ Not a background daemon. This is a Claude Code session: "hey Big C, cross-post m
 
 ### Offer form changes
 
-Add optional fields to the offer form:
-- `buyer_email` (optional but encouraged)
-- `buyer_phone` (optional, for future SMS)
+- `buyer_email` — already exists in schema, models, and React form. No changes needed.
+- `buyer_phone` — add as optional field to schema, models, and offer form (for future SMS).
 
 ## 5. End-of-Life Manager
 
-### Terminal states (replace `expired`)
+### New terminal statuses
+
+The existing codebase has three statuses: `draft`, `active`, `sold`. There is no `expired` status — expiration is handled at query time. We add two new statuses:
 
 - **`donate`** — goes to Goodwill, Habitat ReStore, etc.
 - **`store`** — high-value, low-volume keeper
+
+Dashboard tabs expand from 3 to 5: draft / active / sold / donate / store.
 
 ### Dashboard "End of Life" tab
 
@@ -142,7 +159,7 @@ Items moved to donate/store flagged for removal from Craigslist/FB.
 
 ### Architecture
 
-- **Single service:** FastAPI backend serves the API + static React build
+- **Single service:** FastAPI backend serves the API + static React build. Build step: `cd frontend && npm run build`, then serve `dist/` via FastAPI `StaticFiles` with SPA routing fallback.
 - **SQLite on persistent disk** — fine for single-seller, single-instance
 - **Photos:** Served from the deployment (small files, 50-150 items)
 
@@ -153,6 +170,7 @@ Point a subdomain (e.g., on `karthik.link` or `balasubramanian.org`) to the depl
 ### Environment variables
 
 - `REBRANDLY_API_KEY` (exists)
+- `BASE_URL` (new — public URL of deployed site, replaces hardcoded `localhost:5173` in `share.py`)
 - `HOME_ADDRESS` (new — only revealed in accepted-offer emails)
 - `GOOGLE_VOICE_NUMBER` (new — included in buyer emails)
 - `NOTIFICATION_EMAIL` (new — karthik@balasubramanian.us)
@@ -187,3 +205,16 @@ No scheduling system. Accepted-offer email says "Contact Karthik at [Google Voic
 - Payment processing (cash, Venmo, Zelle handled outside the app)
 - Mobile app (responsive web is sufficient)
 - IKEA buyback integration (separate workflow, already researched)
+
+## 9. Migration & Test Impact
+
+### Schema migration
+
+New columns added via `ALTER TABLE ADD COLUMN` with defaults. Existing data is preserved. No destructive migration needed.
+
+### Test suite impact
+
+- `test_expiration.py` (14 tests) — rewritten for deadline-based model
+- Tests that check marketplace filtering — updated for `deadline` instead of `created_at + 30 days`
+- New tests needed: countdown pricing computation, end-of-life state transitions, external_posts CRUD, pickup_type assignment, notification email triggers
+- Existing negotiation tests remain valid but may need updates for `current_price` pass-through
