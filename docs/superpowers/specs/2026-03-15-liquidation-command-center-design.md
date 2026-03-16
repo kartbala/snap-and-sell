@@ -117,7 +117,7 @@ Not a background daemon. This is a Claude Code session: "hey Big C, cross-post m
 ### Offer form changes
 
 - `buyer_email` — already exists in schema, models, and React form. No changes needed.
-- `buyer_phone` — add as optional field to schema, models, and offer form (for future SMS).
+- `buyer_phone` — already exists in schema as a required field (`NOT NULL`). No changes needed.
 
 ## 5. End-of-Life Manager
 
