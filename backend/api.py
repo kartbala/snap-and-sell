@@ -276,12 +276,14 @@ frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "fronte
 if os.path.isdir(frontend_dist):
     from starlette.responses import FileResponse
 
-    # Serve static assets
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="frontend-assets")
-
     @app.get("/{path:path}")
     def spa_fallback(path: str):
-        """SPA fallback — serve index.html for all non-API routes."""
+        """Serve static files if they exist, otherwise SPA fallback to index.html."""
+        # Try to serve the exact file from dist
+        file_path = os.path.join(frontend_dist, path)
+        if path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        # SPA fallback — serve index.html for all non-API, non-file routes
         index = os.path.join(frontend_dist, "index.html")
         if os.path.exists(index):
             return FileResponse(index)
