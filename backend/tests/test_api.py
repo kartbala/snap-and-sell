@@ -6,17 +6,21 @@ from backend.database import init_db
 
 
 @pytest.fixture
-def client():
-    fd, db_path = tempfile.mkstemp(suffix=".db")
+def db_path():
+    fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
-    init_db(db_path)
+    init_db(path)
+    yield path
+    os.unlink(path)
+
+
+@pytest.fixture
+def client(db_path):
     os.environ["DB_PATH"] = db_path
-    # Import after setting env var so app picks it up
     from backend.api import app, _get_db_path
     _get_db_path.cache_clear()
     with TestClient(app) as c:
         yield c
-    os.unlink(db_path)
 
 
 @pytest.fixture
@@ -139,3 +143,28 @@ class TestOffers:
         resp = client.get(f"/api/listings/{draft_listing}/offers")
         assert resp.status_code == 200
         assert len(resp.json()) == 1
+
+
+class TestCurrentPriceNegotiation:
+    def test_offer_uses_current_price_for_negotiation(self, client, db_path):
+        """When deadline is near, current_price is lower — offer at current_price should be accepted."""
+        from backend.models import create_listing, update_listing, ListingCreate, ListingUpdate
+        from datetime import date, timedelta
+
+        lid = create_listing(
+            ListingCreate(title="Discounted Item", asking_price=100.0, min_price=50.0),
+            db_path,
+        )
+        # Set deadline to 10 days out — aggressive, 7-13 days = 35% off = $65 current price
+        deadline = (date.today() + timedelta(days=10)).isoformat()
+        update_listing(lid, ListingUpdate(status="active", deadline=deadline), db_path)
+
+        # Offer $65 — should be accepted (>= min_price of $50, and equals current_price)
+        res = client.post("/api/offers", json={
+            "listing_id": lid,
+            "buyer_name": "Test Buyer",
+            "buyer_phone": "555-1234",
+            "offer_amount": 65.0,
+        })
+        assert res.status_code == 201
+        assert res.json()["decision"] == "accepted"

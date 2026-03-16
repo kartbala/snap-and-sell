@@ -268,6 +268,35 @@ export default function ListingCard({
         </div>
       )}
 
+      {/* Pickup type + Pricing strategy */}
+      {(listing.pickup_type || listing.pricing_strategy) && (
+        <div style={{
+          display: "flex", gap: "var(--space-sm)",
+          marginTop: "var(--space-sm)", flexWrap: "wrap",
+        }}>
+          {listing.pickup_type && (
+            <span style={{
+              background: listing.pickup_type === "home"
+                ? "rgba(245, 166, 35, 0.15)" : "rgba(78, 205, 196, 0.15)",
+              color: listing.pickup_type === "home"
+                ? "var(--accent-amber)" : "var(--accent-teal)",
+              padding: "4px 12px", borderRadius: "100px", fontSize: "15px",
+            }}>
+              {listing.pickup_type === "home" ? "Home Pickup" : "Meeting Spot"}
+            </span>
+          )}
+          {listing.pricing_strategy && listing.pricing_strategy !== "aggressive" && (
+            <span style={{
+              background: "rgba(233, 69, 96, 0.15)",
+              color: "var(--accent-coral)",
+              padding: "4px 12px", borderRadius: "100px", fontSize: "15px",
+            }}>
+              {listing.pricing_strategy === "hold" ? "Price Hold" : "Fire Sale"}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Price Comparisons */}
       {listing.price_comps && (() => {
         try {

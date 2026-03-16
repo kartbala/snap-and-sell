@@ -19,6 +19,9 @@ class ListingCreate(BaseModel):
     location: str | None = None
     price_comps: str | None = None
     share_url: str | None = None
+    deadline: str = "2026-06-01"
+    pricing_strategy: str = "aggressive"
+    pickup_type: str = "meeting_spot"
 
 
 class ListingUpdate(BaseModel):
@@ -35,6 +38,9 @@ class ListingUpdate(BaseModel):
     location: str | None = None
     price_comps: str | None = None
     share_url: str | None = None
+    deadline: str | None = None
+    pricing_strategy: str | None = None
+    pickup_type: str | None = None
 
 
 class ListingResponse(BaseModel):
@@ -52,6 +58,9 @@ class ListingResponse(BaseModel):
     location: str | None = None
     price_comps: str | None = None
     share_url: str | None = None
+    deadline: str | None = None
+    pricing_strategy: str | None = None
+    pickup_type: str | None = None
     created_at: str
     updated_at: str
 
@@ -101,12 +110,14 @@ def create_listing(data: ListingCreate, db_path: str = DEFAULT_DB_PATH) -> int:
     cursor = conn.execute(
         """INSERT INTO listings (title, description, category, condition,
            asking_price, min_price, original_price, purchase_date,
-           purchase_source, location, price_comps, share_url)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           purchase_source, location, price_comps, share_url,
+           deadline, pricing_strategy, pickup_type)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (data.title, data.description, data.category, data.condition,
          data.asking_price, data.min_price, data.original_price,
          data.purchase_date, data.purchase_source, data.location,
-         data.price_comps, data.share_url),
+         data.price_comps, data.share_url,
+         data.deadline, data.pricing_strategy, data.pickup_type),
     )
     conn.commit()
     lid = cursor.lastrowid

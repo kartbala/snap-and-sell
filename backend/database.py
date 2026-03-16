@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS listings (
     location TEXT,
     price_comps TEXT,
     share_url TEXT,
+    deadline TEXT DEFAULT '2026-06-01',
+    pricing_strategy TEXT DEFAULT 'aggressive',
+    pickup_type TEXT DEFAULT 'meeting_spot',
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -57,13 +60,44 @@ CREATE TABLE IF NOT EXISTS notifications (
     FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
     FOREIGN KEY (offer_id) REFERENCES offers(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS external_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id INTEGER NOT NULL,
+    platform TEXT NOT NULL,
+    url TEXT,
+    posted_at TEXT DEFAULT (datetime('now')),
+    status TEXT DEFAULT 'active',
+    last_price_posted REAL,
+    FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
+);
 """
+
+
+MIGRATIONS = [
+    "ALTER TABLE listings ADD COLUMN deadline TEXT DEFAULT '2026-06-01'",
+    "ALTER TABLE listings ADD COLUMN pricing_strategy TEXT DEFAULT 'aggressive'",
+    "ALTER TABLE listings ADD COLUMN pickup_type TEXT DEFAULT 'meeting_spot'",
+]
+
+
+def migrate_db(db_path: str = DEFAULT_DB_PATH) -> None:
+    """Apply migrations for existing databases. Safe to run multiple times."""
+    conn = sqlite3.connect(db_path)
+    for sql in MIGRATIONS:
+        try:
+            conn.execute(sql)
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+    conn.commit()
+    conn.close()
 
 
 def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
     conn = sqlite3.connect(db_path)
     conn.executescript(SCHEMA_SQL)
     conn.close()
+    migrate_db(db_path)
 
 
 def get_connection(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:

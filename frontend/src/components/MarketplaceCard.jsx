@@ -12,7 +12,7 @@ export default function MarketplaceCard({ listing, onMakeOffer, animationDelay =
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onMakeOffer(listing)}
-      aria-label={`${listing.title} - $${Number(listing.asking_price).toFixed(2)}`}
+      aria-label={`${listing.title} - $${Number(listing.current_price ?? listing.asking_price).toFixed(2)}`}
     >
       {/* Photo */}
       <div className="photo-placeholder" style={{ marginBottom: "var(--space-md)" }}>
@@ -82,9 +82,26 @@ export default function MarketplaceCard({ listing, onMakeOffer, animationDelay =
             flexWrap: "wrap",
           }}
         >
-          <span className="price" style={{ color: "var(--accent-teal)" }}>
-            ${Number(listing.asking_price).toFixed(2)}
-          </span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-sm)" }}>
+            <span className="price" style={{ color: "var(--accent-teal)" }}>
+              ${listing.current_price != null
+                ? Number(listing.current_price).toFixed(2)
+                : listing.asking_price != null
+                ? Number(listing.asking_price).toFixed(2)
+                : "---"}
+            </span>
+            {listing.current_price != null &&
+              listing.asking_price != null &&
+              listing.current_price < listing.asking_price && (
+              <span style={{
+                textDecoration: "line-through",
+                color: "var(--text-muted)",
+                fontSize: "var(--text-sm)",
+              }}>
+                ${Number(listing.asking_price).toFixed(2)}
+              </span>
+            )}
+          </div>
 
           {listing.condition && (
             <span
@@ -106,18 +123,31 @@ export default function MarketplaceCard({ listing, onMakeOffer, animationDelay =
           paddingTop: "var(--space-sm)",
         }}
       >
-        {listing.days_remaining != null && (
-          <p
-            style={{
-              fontSize: "14px",
-              color: listing.days_remaining <= 5 ? "var(--accent-coral)" : "var(--text-muted)",
-              fontWeight: listing.days_remaining <= 5 ? 700 : 400,
-              marginBottom: 4,
-            }}
-          >
-            {listing.days_remaining <= 5
-              ? `Only ${listing.days_remaining} day${listing.days_remaining !== 1 ? "s" : ""} left!`
-              : `${listing.days_remaining} days remaining`}
+        {listing.days_remaining != null && listing.days_remaining <= 5 && (
+          <div style={{
+            marginBottom: 4,
+            padding: "4px 12px",
+            background: listing.days_remaining <= 2
+              ? "rgba(233, 69, 96, 0.2)" : "rgba(245, 166, 35, 0.15)",
+            color: listing.days_remaining <= 2
+              ? "var(--accent-coral)" : "var(--accent-amber)",
+            borderRadius: "100px",
+            fontSize: "15px",
+            fontWeight: 700,
+            display: "inline-block",
+          }}>
+            {listing.days_remaining === 0
+              ? "Last day!"
+              : `${listing.days_remaining} day${listing.days_remaining !== 1 ? "s" : ""} left`}
+          </div>
+        )}
+        {listing.days_remaining != null && listing.days_remaining > 5 && (
+          <p style={{
+            fontSize: "14px",
+            color: "var(--text-muted)",
+            marginBottom: 4,
+          }}>
+            {listing.days_remaining} days remaining
           </p>
         )}
         <p style={{ color: "var(--text-muted)", fontSize: "var(--text-sm)" }}>

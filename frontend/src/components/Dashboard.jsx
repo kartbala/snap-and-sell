@@ -1,8 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import ListingCard from "./ListingCard";
 
-const TABS = ["draft", "active", "sold"];
-const TAB_LABELS = { draft: "Drafts", active: "Active", sold: "Sold" };
+const TABS = ["draft", "active", "sold", "donate", "store"];
+const TAB_LABELS = {
+  draft: "Drafts",
+  active: "Active",
+  sold: "Sold",
+  donate: "Donate",
+  store: "Store",
+};
+const EMPTY_MESSAGES = {
+  draft: { icon: "&#128221;", title: "No drafts yet", sub: "Use Gemini to scan your photos and create listings" },
+  active: { icon: "&#128722;", title: "No active listings", sub: "Approve some drafts to start selling" },
+  sold: { icon: "&#127881;", title: "No sold items yet", sub: "Sold items will appear here" },
+  donate: { icon: "&#127873;", title: "No items for donation", sub: "Items past deadline without action go here" },
+  store: { icon: "&#128230;", title: "No stored items", sub: "High-value keepers go here" },
+};
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("draft");
@@ -99,6 +112,21 @@ export default function Dashboard() {
     }
   };
 
+  const handleBatchStatus = async (newStatus) => {
+    if (selected.size === 0) return;
+    try {
+      const res = await fetch("/api/listings/batch-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...selected], status: newStatus }),
+      });
+      if (res.ok) {
+        setSelected(new Set());
+        fetchListings();
+      }
+    } catch {}
+  };
+
   const handleDelete = async (id) => {
     try {
       const res = await fetch(`/api/listings/${id}`, { method: "DELETE" });
@@ -145,8 +173,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Toolbar for drafts */}
-      {activeTab === "draft" && listings.length > 0 && (
+      {/* Toolbar for drafts and active */}
+      {(activeTab === "draft" || activeTab === "active") && listings.length > 0 && (
         <div className="toolbar animate-in" style={{ animationDelay: "0.1s" }}>
           <div className="toolbar-left">
             <button className="btn btn-ghost" onClick={selectAll}>
@@ -158,13 +186,25 @@ export default function Dashboard() {
               </span>
             )}
           </div>
-          <button
-            className="btn btn-success"
-            disabled={selected.size === 0}
-            onClick={handleBatchApprove}
-          >
-            Approve Selected ({selected.size})
-          </button>
+          {activeTab === "draft" && (
+            <button
+              className="btn btn-success"
+              disabled={selected.size === 0}
+              onClick={handleBatchApprove}
+            >
+              Approve Selected ({selected.size})
+            </button>
+          )}
+          {activeTab === "active" && selected.size > 0 && (
+            <>
+              <button className="btn btn-ghost" onClick={() => handleBatchStatus("donate")}>
+                Donate ({selected.size})
+              </button>
+              <button className="btn btn-ghost" onClick={() => handleBatchStatus("store")}>
+                Store ({selected.size})
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -175,23 +215,9 @@ export default function Dashboard() {
         </div>
       ) : listings.length === 0 ? (
         <div className="empty-state animate-in">
-          <div className="icon">
-            {activeTab === "draft" ? "&#128221;" : activeTab === "active" ? "&#128722;" : "&#127881;"}
-          </div>
-          <h3>
-            {activeTab === "draft"
-              ? "No drafts yet"
-              : activeTab === "active"
-              ? "No active listings"
-              : "No sold items yet"}
-          </h3>
-          <p>
-            {activeTab === "draft"
-              ? "Use Gemini to scan your photos and create listings"
-              : activeTab === "active"
-              ? "Approve some drafts to start selling"
-              : "Sold items will appear here"}
-          </p>
+          <div className="icon" dangerouslySetInnerHTML={{ __html: (EMPTY_MESSAGES[activeTab] || EMPTY_MESSAGES.draft).icon }} />
+          <h3>{(EMPTY_MESSAGES[activeTab] || EMPTY_MESSAGES.draft).title}</h3>
+          <p>{(EMPTY_MESSAGES[activeTab] || EMPTY_MESSAGES.draft).sub}</p>
         </div>
       ) : (
         <div className="grid grid-2">
@@ -202,7 +228,7 @@ export default function Dashboard() {
               selected={selected.has(listing.id)}
               onToggleSelect={toggleSelect}
               onUpdate={handleUpdate}
-              showCheckbox={activeTab === "draft"}
+              showCheckbox={activeTab === "draft" || activeTab === "active"}
               animationDelay={i}
             />
           ))}

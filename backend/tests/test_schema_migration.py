@@ -70,3 +70,34 @@ class TestNewListingColumns:
         row = conn.execute("SELECT share_url FROM listings WHERE title='Test2'").fetchone()
         conn.close()
         assert row["share_url"] is None
+
+
+class TestLiquidationColumns:
+    def test_listings_has_deadline_column(self, db_path):
+        conn = get_connection(db_path)
+        row = conn.execute("PRAGMA table_info(listings)").fetchall()
+        columns = [r["name"] for r in row]
+        conn.close()
+        assert "deadline" in columns
+
+    def test_listings_has_pricing_strategy_column(self, db_path):
+        conn = get_connection(db_path)
+        row = conn.execute("PRAGMA table_info(listings)").fetchall()
+        columns = [r["name"] for r in row]
+        conn.close()
+        assert "pricing_strategy" in columns
+
+    def test_listings_has_pickup_type_column(self, db_path):
+        conn = get_connection(db_path)
+        row = conn.execute("PRAGMA table_info(listings)").fetchall()
+        columns = [r["name"] for r in row]
+        conn.close()
+        assert "pickup_type" in columns
+
+    def test_external_posts_table_exists(self, db_path):
+        conn = get_connection(db_path)
+        row = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='external_posts'"
+        ).fetchone()
+        conn.close()
+        assert row is not None

@@ -85,6 +85,9 @@ Parses Gemini numbered bold-item format. Depreciation: electronics 55%, furnitur
 1. negotiation.py: TypeError crash when asking_price=None with min_price set (fixed)
 2. Vite 7 incompatible with Node 21.6.2 — pinned to Vite 6
 
+## Known Issues
+1. `test_update_sets_updated_at` — pre-existing flaky test. SQLite `datetime('now')` returns UTC (`2026-03-08 01:05:24`) but Python `datetime.now().isoformat()` returns local time (`2026-03-07T20:05:24`). String comparison fails across the format boundary. Not a real bug — cosmetic test issue.
+
 ## Gemini Intake Workflow (Claude Code session, not scripted)
 1. Navigate to gemini.google.com via Claude-in-Chrome
 2. Prompt: "@Google Photos last N photos. Identify brand/model. Search @Gmail for receipts."
@@ -106,6 +109,10 @@ Parses Gemini numbered bold-item format. Depreciation: electronics 55%, furnitur
 
 ## Key Competitive Insight
 Strongest differentiator: AI-powered intake (no competitor auto-scans photos + finds receipts + auto-prices). Instant negotiation also unique — removes tedious back-and-forth.
+
+## Deployment
+- **Render.com:** Previously attempted, did not work (possible user error — needs investigation)
+- **Alternatives to consider:** GitHub Pages (static) + Railway/Fly.io (backend), or Cloudflare Pages + Workers
 
 ## Running
 ```bash

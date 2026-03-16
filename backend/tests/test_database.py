@@ -51,6 +51,7 @@ class TestInitDb:
             "id", "title", "description", "category", "condition",
             "asking_price", "min_price", "original_price", "purchase_date",
             "purchase_source", "status", "location", "price_comps", "share_url",
+            "deadline", "pricing_strategy", "pickup_type",
             "created_at", "updated_at",
         }
         assert expected == columns
@@ -85,7 +86,7 @@ class TestInitDb:
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
         )
         tables = {row[0] for row in cursor.fetchall()}
-        assert tables == {"listings", "photos", "offers", "notifications"}
+        assert tables == {"listings", "photos", "offers", "notifications", "external_posts"}
         conn.close()
 
 

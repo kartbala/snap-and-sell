@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from functools import lru_cache
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,8 +10,7 @@ from pydantic import BaseModel
 from backend.database import init_db, DEFAULT_DB_PATH
 from backend import models
 from backend.meeting_spots import get_all_spots, suggest_spot, spot_to_dict
-
-LISTING_EXPIRY_DAYS = 30
+from backend.pricing import compute_current_price
 
 
 @lru_cache
@@ -94,34 +93,54 @@ def batch_approve(req: BatchApproveRequest):
     return {"updated": count}
 
 
-# --- Marketplace (public, no min_price, excludes expired) ---
+class BatchStatusRequest(BaseModel):
+    ids: list[int]
+    status: str
 
-def _days_remaining(created_at: str) -> int:
-    """Calculate days remaining before a listing expires."""
+
+@app.post("/api/listings/batch-status")
+def batch_status(req: BatchStatusRequest):
+    count = models.batch_update_status(req.ids, req.status, _get_db_path())
+    return {"updated": count}
+
+
+# --- Marketplace (public, no min_price, excludes past-deadline) ---
+
+def _days_remaining(deadline: str | None) -> int:
+    """Calculate days remaining before a listing's deadline."""
+    if not deadline:
+        return 0
     try:
-        created = datetime.fromisoformat(created_at)
+        dl = date.fromisoformat(deadline)
     except ValueError:
-        created = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
-    expiry = created + timedelta(days=LISTING_EXPIRY_DAYS)
-    remaining = (expiry - datetime.now()).days
-    return max(remaining, 0)
+        return 0
+    return max((dl - date.today()).days, 0)
 
 
 @app.get("/api/marketplace")
 def marketplace():
     listings = models.list_listings(status="active", db_path=_get_db_path())
-    cutoff = datetime.now() - timedelta(days=LISTING_EXPIRY_DAYS)
+    today = date.today()
     result = []
     for listing in listings:
-        try:
-            created = datetime.fromisoformat(listing.created_at)
-        except ValueError:
-            created = datetime.strptime(listing.created_at, "%Y-%m-%d %H:%M:%S")
-        if created < cutoff:
-            continue
+        # Skip past-deadline listings
+        if listing.deadline:
+            try:
+                dl = date.fromisoformat(listing.deadline)
+            except ValueError:
+                continue
+            if dl < today:
+                continue
+
         d = listing.model_dump()
         d.pop("min_price", None)
-        d["days_remaining"] = _days_remaining(listing.created_at)
+        d["days_remaining"] = _days_remaining(listing.deadline)
+        d["current_price"] = compute_current_price(
+            asking_price=listing.asking_price,
+            min_price=listing.min_price,
+            pricing_strategy=listing.pricing_strategy or "aggressive",
+            deadline=date.fromisoformat(listing.deadline) if listing.deadline else today,
+        )
         result.append(d)
     return result
 
@@ -143,8 +162,16 @@ def create_offer(data: models.OfferCreate):
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing not found")
 
+    # Compute current (potentially discounted) price
+    current_price = compute_current_price(
+        asking_price=listing.asking_price,
+        min_price=listing.min_price,
+        pricing_strategy=listing.pricing_strategy or "aggressive",
+        deadline=date.fromisoformat(listing.deadline) if listing.deadline else date.today(),
+    )
+
     oid = models.create_offer(data, _get_db_path())
-    result = evaluate_offer(data.offer_amount, listing.asking_price, listing.min_price)
+    result = evaluate_offer(data.offer_amount, current_price, listing.min_price)
     models.update_offer_status(oid, result.decision, result.message, _get_db_path())
     models.create_notification(data.listing_id, oid, "new_offer", _get_db_path())
     response = {
@@ -224,3 +251,38 @@ def list_offers(lid: int):
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing not found")
     return models.list_offers(listing_id=lid, db_path=_get_db_path())
+
+
+# --- External Posts ---
+
+@app.get("/api/listings/{lid}/external-posts")
+def list_external_posts_for_listing(lid: int):
+    from backend.external_posts import list_external_posts
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return list_external_posts(listing_id=lid, db_path=_get_db_path())
+
+@app.get("/api/external-posts/stale")
+def get_stale_external_posts():
+    from backend.external_posts import get_stale_posts
+    return get_stale_posts(db_path=_get_db_path())
+
+
+# --- Static file serving (production) ---
+# This must be LAST so it doesn't shadow API routes
+
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.isdir(frontend_dist):
+    from starlette.responses import FileResponse
+
+    # Serve static assets
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="frontend-assets")
+
+    @app.get("/{path:path}")
+    def spa_fallback(path: str):
+        """SPA fallback — serve index.html for all non-API routes."""
+        index = os.path.join(frontend_dist, "index.html")
+        if os.path.exists(index):
+            return FileResponse(index)
+        raise HTTPException(status_code=404, detail="Not found")

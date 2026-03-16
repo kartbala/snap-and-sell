@@ -40,7 +40,8 @@ def _call_rebrandly(payload: dict) -> dict:
 
 
 def create_short_link(
-    title: str, listing_id: int, base_url: str = "http://localhost:5173"
+    title: str, listing_id: int,
+    base_url: str = os.environ.get("BASE_URL", "http://localhost:5173"),
 ) -> str | None:
     """Create a Rebrandly short link for a listing. Returns URL or None on failure."""
     payload = {

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: snap-and-sell
+    runtime: docker
+    plan: free
+    envVars:
+      - key: BASE_URL
+        value: https://snap-and-sell.onrender.com
+      - key: REBRANDLY_API_KEY
+        sync: false
+      - key: NOTIFICATION_EMAIL
+        value: karthik@balasubramanian.us
+      - key: GOOGLE_VOICE_NUMBER
+        value: "+1-202-684-6252"
+      - key: HOME_ADDRESS
+        sync: false
+    disk:
+      name: snap-sell-data
+      mountPath: /app/data
+      sizeGB: 1
