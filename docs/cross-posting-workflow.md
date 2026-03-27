@@ -1,47 +1,55 @@
 # Cross-Posting Workflow
 
-Claude-in-Chrome workflow for posting listings to Craigslist and Facebook Marketplace.
+## Automated (Recommended)
 
-## Prerequisites
-- Karthik is logged in to Craigslist and Facebook Marketplace in Chrome
-- Claude-in-Chrome extension is active
-- Snap & Sell backend is running (local or deployed)
+Use the `cross_poster` CLI tool to post listings to Craigslist and Facebook Marketplace with photos.
 
-## Post New Listings
+### First-Time Setup
 
-1. `GET /api/listings?status=active` to get all active listings
-2. For each listing without external posts:
-   a. **Craigslist:**
-      - Open Craigslist DC > "for sale by owner"
-      - Fill in: title, description, current_price (from marketplace API), category, photos
-      - Post and capture the resulting URL
-      - Record via API: `POST /api/listings/{lid}/external-posts` with `platform=craigslist, url=<captured>`
-   b. **Facebook Marketplace:**
-      - Open Facebook Marketplace > Create new listing
-      - Fill in same details (title, description, current_price, category, photos)
-      - Capture URL after posting
-      - Record via API: `POST /api/listings/{lid}/external-posts` with `platform=facebook, url=<captured>`
+```bash
+# Install dependencies
+pip install playwright requests
+playwright install chromium
 
-## Update Stale Prices
+# Log in to each platform (one-time, saved to browser profile)
+python -m cross_poster setup --platform craigslist
+python -m cross_poster setup --platform facebook
+```
 
-When countdown pricing changes the current_price, external posts become stale.
+### Posting
 
-1. `GET /api/external-posts/stale` to find posts needing price updates
-2. For each stale post:
-   a. Navigate to the post URL
-   b. Edit the price to match the listing's current `current_price` (from `GET /api/marketplace`)
-   c. Update the post status: `PUT /api/external-posts/{pid}` with `status=active`
+```bash
+# List what will be posted
+python -m cross_poster list
 
-## Remove Sold/Donated/Stored Listings
+# Post all items to both platforms
+python -m cross_poster post
 
-When listings leave the active state, their external posts should be removed.
+# Post to one platform
+python -m cross_poster post --platform craigslist
 
-1. `GET /api/listings?status=sold` (repeat for `donate` and `store`)
-2. For each listing that has external posts:
-   a. Navigate to the external post URL
-   b. Delete/remove the listing from the platform
-   c. Update post status: `PUT /api/external-posts/{pid}` with `status=removed`
+# Post one item
+python -m cross_poster post --item "Schwinn"
 
-## Triggering This Workflow
+# Dry run (preview without publishing)
+python -m cross_poster post --dry-run
+```
 
-Ask Claude: "Cross-post my active listings" or "Update stale prices on Craigslist/Facebook" during a Claude Code session with Chrome automation active.
+### Data Sources
+
+1. **Snap & Sell API** (primary): pulls active listings from `GET /api/marketplace`
+2. **listings.json** (fallback): edit `cross_poster/listings.json` directly
+
+### After Posting
+
+Successful posts are recorded to the Snap & Sell API via `POST /api/listings/{id}/external-posts`. If the API is unavailable, results are saved to `cross_poster/results.json`.
+
+## Manual (Claude-in-Chrome)
+
+For one-off posts or when the CLI isn't available, ask Claude:
+"Cross-post my active listings" or "Post [item] to Craigslist"
+during a Claude Code session with Chrome automation active.
+
+## Price Updates & Removal
+
+Not yet automated. Use the Snap & Sell dashboard or edit listings manually on each platform.
