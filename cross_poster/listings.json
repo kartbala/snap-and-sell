@@ -1,0 +1,42 @@
+[
+  {
+    "title": "URB-E Pro GT Electric Scooter - Great Condition",
+    "price": 350,
+    "description": "URB-E Pro GT electric scooter in great condition. Foldable, lightweight, and perfect for city commuting. Compact enough to carry on the Metro or store in a small apartment.\n\nPriced to sell. Cash or Venmo accepted.\n\nPickup in SW DC (near Waterfront). Serious inquiries only.",
+    "category": "bikes",
+    "location": "SW Washington DC",
+    "zip": "20024",
+    "photos": [],
+    "platforms": ["craigslist", "facebook"]
+  },
+  {
+    "title": "Schwinn IC4 Indoor Cycling Bike - Peloton/Zwift Compatible",
+    "price": 360,
+    "description": "Schwinn IC4 indoor cycling bike in great condition. Magnetic resistance, Bluetooth connectivity, dual SPD pedals, LCD console. Works with Peloton, Zwift, and other cycling apps.\n\nBought from Amazon in July 2020 for $799. Barely used — moving overseas and need to sell.\n\nCash or Venmo accepted. Pickup in SW DC (Waterfront area). Serious inquiries only.",
+    "category": "fitness",
+    "location": "SW Washington DC",
+    "zip": "20024",
+    "photos": ["~/Downloads/IMG_1594.JPG"],
+    "platforms": ["craigslist", "facebook"]
+  },
+  {
+    "title": "AOC 40\" Curved 4K UHD Monitor (C4008VU8) - USB Hub, HDMI",
+    "price": 420,
+    "description": "AOC C4008VU8 — 40-inch curved VA panel, 3840x2160 4K UHD resolution. Features HDMI 2.0, DisplayPort, VGA, built-in 5W speakers, and USB 3.0 hub with 4 ports.\n\nGreat for productivity, coding, or media consumption. Massive screen real estate.\n\nBought from Walmart in May 2018 for $499. Moving overseas — must sell.\n\nCash or Venmo accepted. Pickup in SW DC (Waterfront area). Serious inquiries only.",
+    "category": "electronics",
+    "location": "SW Washington DC",
+    "zip": "20024",
+    "photos": ["~/Downloads/IMG_1657.JPG"],
+    "platforms": ["craigslist", "facebook"]
+  },
+  {
+    "title": "IKEA FRIHETEN Sleeper Sectional with Storage - Dark Gray",
+    "price": 300,
+    "description": "IKEA FRIHETEN 3-seat sleeper sectional with built-in storage. Skiftebo dark gray fabric. Converts to a full-size bed, chaise has hidden storage compartment.\n\nBought from IKEA in June 2019 for $599. Good condition — well-maintained, no pets, no smoking.\n\nMoving overseas — must sell. Cash or Venmo.\n\nPickup in SW DC (Waterfront). You will need a truck or large SUV. Serious inquiries only.",
+    "category": "furniture",
+    "location": "SW Washington DC",
+    "zip": "20024",
+    "photos": [],
+    "platforms": ["craigslist", "facebook"]
+  }
+]
