@@ -102,5 +102,5 @@ def post_all_to_facebook(
             if i < len(listings) - 1:
                 human_pause(POST_DELAY)
     finally:
-        close_browser(pw, context)
+        close_browser(pw, context, "facebook")
     return results
