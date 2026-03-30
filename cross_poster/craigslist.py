@@ -99,9 +99,27 @@ def _handle_step(page: Page, listing: Listing) -> None:
         page.fill("[name='postal']", listing.zip)
         page.fill("[name='PostingBody']", listing.description)
 
-        condition = page.locator("[name='condition']")
-        if condition.is_visible(timeout=1000):
-            condition.select_option("40")
+        # Set condition — use JS to find any valid non-empty option
+        page.evaluate("""() => {
+            const sel = document.querySelector('[name="condition"]');
+            if (!sel) return;
+            // Try to select "good" by text, fall back to first non-empty option
+            for (const opt of sel.options) {
+                if (opt.text.toLowerCase().includes('good')) {
+                    sel.value = opt.value;
+                    sel.dispatchEvent(new Event('change', {bubbles: true}));
+                    return;
+                }
+            }
+            // Fallback: select first option that isn't the blank/placeholder
+            for (const opt of sel.options) {
+                if (opt.value && opt.value !== '-' && opt.value !== '') {
+                    sel.value = opt.value;
+                    sel.dispatchEvent(new Event('change', {bubbles: true}));
+                    return;
+                }
+            }
+        }""")
 
         # Fill email and select CL mail relay if not logged in
         page.evaluate("""() => {
@@ -206,13 +224,19 @@ def post_to_craigslist(
                 print(f"  WARNING: unknown page state: {page.url}")
                 break
             if step in seen_steps:
-                # Already handled this step — CL may have validation errors
-                # or the page didn't actually change. Take a screenshot and bail.
                 print(f"  WARNING: stuck on step '{step}', checking for errors...")
+                screenshot = save_error_screenshot(page, f"cl_stuck_{listing.title[:20]}")
+                print(f"  Screenshot saved: {screenshot}")
                 # Check for error messages on the page
                 errors = page.locator(".error, .errormsg, [style*='color: red']")
                 if errors.count() > 0:
                     print(f"  CL validation error: {errors.first.inner_text()}")
+                # Print page text for debugging
+                try:
+                    body = page.inner_text("body")[:500]
+                    print(f"  Page text: {body[:200]}")
+                except Exception:
+                    pass
                 break
             seen_steps.add(step)
             _handle_step(page, listing)
