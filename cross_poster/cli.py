@@ -71,6 +71,30 @@ def cmd_post(args: argparse.Namespace) -> None:
         print(f"  {platform}: {posted}/{len(results)} posted")
 
 
+def cmd_add_images(args: argparse.Namespace) -> None:
+    """Add photos to existing CL listings."""
+    listings = _load(args)
+    if not listings:
+        print("No listings found.")
+        return
+
+    if args.item:
+        query = args.item.lower()
+        listings = [l for l in listings if query in l.title.lower()]
+        if not listings:
+            print(f"No listings matching '{args.item}'.")
+            return
+
+    from cross_poster.craigslist import add_images_to_craigslist
+
+    print(f"\n=== Adding images to {len(listings)} Craigslist listings ===")
+    results = add_images_to_craigslist(listings, dry_run=args.dry_run)
+
+    print("\n=== Summary ===")
+    success = sum(1 for v in results.values() if v)
+    print(f"  Images added: {success}/{len(results)}")
+
+
 def _load(args: argparse.Namespace) -> list[Listing]:
     json_path = getattr(args, "json", None)
     api_url = getattr(args, "api_url", "http://localhost:5001")
@@ -162,6 +186,17 @@ def main() -> None:
 
     sub.add_parser("list", help="List items that would be posted")
 
+    img_parser = sub.add_parser("add-images", help="Add photos to existing CL listings")
+    img_parser.add_argument(
+        "--item",
+        help="Filter by title substring",
+    )
+    img_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Upload photos but don't save/publish",
+    )
+
     post_parser = sub.add_parser("post", help="Post listings")
     post_parser.add_argument(
         "--platform",
@@ -184,6 +219,8 @@ def main() -> None:
         cmd_setup(args)
     elif args.command == "list":
         cmd_list(args)
+    elif args.command == "add-images":
+        cmd_add_images(args)
     elif args.command == "post":
         cmd_post(args)
 

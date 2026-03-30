@@ -36,7 +36,7 @@
     "category": "furniture",
     "location": "SW Washington DC",
     "zip": "20024",
-    "photos": [],
+    "photos": ["~/Downloads/20190322_183051.jpg"],
     "platforms": ["craigslist", "facebook"]
   }
 ]

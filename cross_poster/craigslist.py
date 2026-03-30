@@ -502,3 +502,164 @@ def post_all_to_craigslist(
     finally:
         close_browser(pw, context, "craigslist")
     return results
+
+
+def add_images_to_craigslist(
+    listings: list[Listing], dry_run: bool = False
+) -> dict[str, bool]:
+    """Add images to existing CL listings by navigating to the account postings
+    page, finding each listing by title, and uploading photos via edit → edit images.
+
+    Only processes listings that have local photos available.
+
+    Returns {title: success_bool}.
+    """
+    # Filter to listings with actual photos on disk
+    actionable = []
+    for listing in listings:
+        if "craigslist" not in listing.platforms:
+            continue
+        resolved = resolve_photo_paths(listing.photos)
+        if not resolved:
+            continue
+        actionable.append((listing, resolved))
+
+    if not actionable:
+        print("  No listings with local photos to upload.")
+        return {}
+
+    pw, context = launch_browser("craigslist", headless=False)
+    results = {}
+    try:
+        # Navigate to account postings page
+        page = context.new_page()
+        page.goto("https://accounts.craigslist.org/login/home?show_tab=postings")
+        human_pause(3)
+
+        # Click "all postings" to see everything
+        page.evaluate("""() => {
+            const buttons = document.querySelectorAll('button');
+            for (const b of buttons) {
+                if (b.textContent.includes('all postings')) { b.click(); return; }
+            }
+        }""")
+        human_pause(3)
+
+        page_text = page.inner_text("body")
+
+        for listing, photo_paths in actionable:
+            print(f"\n[IMG] {listing.title} ({len(photo_paths)} photos)")
+
+            # Find the listing row by title substring (first 40 chars)
+            search_title = listing.title[:40]
+            if search_title not in page_text:
+                print(f"  Listing not found in CL account. Skipping.")
+                results[listing.title] = False
+                continue
+
+            # Click "edit" for this listing — use JS to find the row and click edit
+            found = page.evaluate(f"""() => {{
+                const links = document.querySelectorAll('a');
+                for (const a of links) {{
+                    if (a.textContent.includes('{search_title[:30]}')) {{
+                        // Found the listing link — find its row's edit button
+                        const row = a.closest('tr') || a.parentElement;
+                        if (row) {{
+                            const editBtn = row.querySelector('button:has(+ a), input[value="edit"]');
+                            // Try finding edit in sibling elements
+                            const buttons = row.querySelectorAll('button, input[type="submit"]');
+                            for (const b of buttons) {{
+                                if (b.textContent.includes('edit') || b.value === 'edit') {{
+                                    b.click();
+                                    return true;
+                                }}
+                            }}
+                        }}
+                        return false;
+                    }}
+                }}
+                return false;
+            }}""")
+
+            if not found:
+                # Fallback: click the listing link directly to get to its manage page
+                page.locator(f"a:has-text('{search_title[:30]}')").first.click()
+                human_pause(3)
+
+                # From the listing page, look for edit button
+                edit_btn = page.locator("button:has-text('edit images')")
+                if edit_btn.is_visible(timeout=3000):
+                    edit_btn.click()
+                    human_pause(3)
+                else:
+                    # Try the account edit flow
+                    page.goto("https://accounts.craigslist.org/login/home?show_tab=postings")
+                    human_pause(3)
+                    print(f"  Could not find edit button. Skipping.")
+                    results[listing.title] = False
+                    continue
+
+            human_pause(3)
+
+            # We should now be on a preview/edit page — click "edit images"
+            if "preview" in page.url or "s=preview" in page.url:
+                edit_img_btn = page.locator("button:has-text('edit images')")
+                if edit_img_btn.is_visible(timeout=3000):
+                    edit_img_btn.click()
+                    human_pause(3)
+
+            # Check if we're on the editimage page
+            if "editimage" in page.url:
+                # Upload photos
+                file_input = page.locator("input[type='file']")
+                file_input.set_input_files(photo_paths)
+                print(f"  Uploading {len(photo_paths)} photos...")
+                human_pause(8)  # Wait for uploads
+
+                if dry_run:
+                    print(f"  [DRY RUN] Photos uploaded but not saving.")
+                    results[listing.title] = True
+                else:
+                    # Click "done with images"
+                    page.evaluate("""() => {
+                        const buttons = document.querySelectorAll('button');
+                        for (const b of buttons) {
+                            if (b.textContent.includes('done with images')) { b.click(); return; }
+                        }
+                    }""")
+                    human_pause(3)
+
+                    # Publish the edit
+                    if "preview" in page.url:
+                        page.evaluate("""() => {
+                            const buttons = document.querySelectorAll('button');
+                            for (const b of buttons) {
+                                if (b.textContent.includes('publish')) { b.click(); return; }
+                            }
+                        }""")
+                        human_pause(5)
+
+                    print(f"  Photos added successfully!")
+                    results[listing.title] = True
+            else:
+                print(f"  Could not reach edit images page. URL: {page.url}")
+                screenshot = save_error_screenshot(page, f"cl_img_{listing.title[:20]}")
+                print(f"  Screenshot: {screenshot}")
+                results[listing.title] = False
+
+            # Go back to postings for the next listing
+            page.goto("https://accounts.craigslist.org/login/home?show_tab=postings")
+            human_pause(3)
+            page.evaluate("""() => {
+                const buttons = document.querySelectorAll('button');
+                for (const b of buttons) {
+                    if (b.textContent.includes('all postings')) { b.click(); return; }
+                }
+            }""")
+            human_pause(3)
+            page_text = page.inner_text("body")
+
+        page.close()
+    finally:
+        close_browser(pw, context, "craigslist")
+    return results
