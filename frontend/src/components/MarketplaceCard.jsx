@@ -1,4 +1,9 @@
+import { useState } from "react";
+
 export default function MarketplaceCard({ listing, onMakeOffer, animationDelay = 0 }) {
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const photos = listing.photos || [];
+
   return (
     <div
       className="card animate-in"
@@ -14,10 +19,35 @@ export default function MarketplaceCard({ listing, onMakeOffer, animationDelay =
       onKeyDown={(e) => e.key === "Enter" && onMakeOffer(listing)}
       aria-label={`${listing.title} - $${Number(listing.current_price ?? listing.asking_price).toFixed(2)}`}
     >
-      {/* Photo */}
-      <div className="photo-placeholder" style={{ marginBottom: "var(--space-md)" }}>
-        {listing.photos?.[0] ? (
-          <img src={listing.photos[0]} alt={listing.title} />
+      {/* Photo carousel */}
+      <div className="photo-placeholder" style={{ marginBottom: "var(--space-md)", position: "relative" }}>
+        {photos.length > 0 ? (
+          <>
+            <img src={photos[photoIdx]} alt={`${listing.title} photo ${photoIdx + 1}`} />
+            {photos.length > 1 && (
+              <>
+                <button
+                  className="photo-nav photo-nav-left"
+                  onClick={(e) => { e.stopPropagation(); setPhotoIdx((photoIdx - 1 + photos.length) % photos.length); }}
+                  aria-label="Previous photo"
+                >&lsaquo;</button>
+                <button
+                  className="photo-nav photo-nav-right"
+                  onClick={(e) => { e.stopPropagation(); setPhotoIdx((photoIdx + 1) % photos.length); }}
+                  aria-label="Next photo"
+                >&rsaquo;</button>
+                <div className="photo-dots">
+                  {photos.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`photo-dot${i === photoIdx ? " active" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); setPhotoIdx(i); }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <span aria-hidden="true" style={{ fontSize: 56 }}>&#128247;</span>
         )}

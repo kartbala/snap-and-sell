@@ -575,6 +575,47 @@ input[type="checkbox"]:checked::after {
   height: 100%;
   object-fit: cover;
 }
+.photo-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+.photo-placeholder:hover .photo-nav {
+  opacity: 1;
+}
+.photo-nav-left { left: 6px; }
+.photo-nav-right { right: 6px; }
+.photo-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+.photo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.photo-dot.active {
+  background: #fff;
+}
 
 /* ---- Offer result display ---- */
 

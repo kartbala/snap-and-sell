@@ -1,5 +1,31 @@
 import { useState } from "react";
 
+function PhotoCarousel({ photos, title }) {
+  const [idx, setIdx] = useState(0);
+  return (
+    <div className="photo-placeholder" style={{ marginBottom: "var(--space-md)", position: "relative" }}>
+      {photos.length > 0 ? (
+        <>
+          <img src={photos[idx]} alt={`${title} photo ${idx + 1}`} />
+          {photos.length > 1 && (
+            <>
+              <button className="photo-nav photo-nav-left" onClick={(e) => { e.stopPropagation(); setIdx((idx - 1 + photos.length) % photos.length); }} aria-label="Previous photo">&lsaquo;</button>
+              <button className="photo-nav photo-nav-right" onClick={(e) => { e.stopPropagation(); setIdx((idx + 1) % photos.length); }} aria-label="Next photo">&rsaquo;</button>
+              <div className="photo-dots">
+                {photos.map((_, i) => (
+                  <span key={i} className={`photo-dot${i === idx ? " active" : ""}`} onClick={(e) => { e.stopPropagation(); setIdx(i); }} />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <span aria-hidden="true">&#128247;</span>
+      )}
+    </div>
+  );
+}
+
 export default function ListingCard({
   listing,
   selected,
@@ -99,14 +125,8 @@ export default function ListingCard({
         )}
       </div>
 
-      {/* Photo */}
-      <div className="photo-placeholder" style={{ marginBottom: "var(--space-md)" }}>
-        {listing.photos?.[0] ? (
-          <img src={listing.photos[0]} alt={listing.title} />
-        ) : (
-          <span aria-hidden="true">&#128247;</span>
-        )}
-      </div>
+      {/* Photo carousel */}
+      <PhotoCarousel photos={listing.photos || []} title={listing.title} />
 
       {/* Title */}
       {editing === "title" ? (
