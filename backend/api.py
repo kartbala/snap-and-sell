@@ -35,9 +35,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-photos_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "photos")
-if os.path.isdir(photos_dir):
-    app.mount("/photos", StaticFiles(directory=photos_dir), name="photos")
+_persist_dir = "/app/persist"
+if os.path.isdir(_persist_dir):
+    photos_dir = os.path.join(_persist_dir, "photos")
+else:
+    photos_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "photos")
+os.makedirs(photos_dir, exist_ok=True)
+app.mount("/photos", StaticFiles(directory=photos_dir), name="photos")
 
 
 # --- Health ---
@@ -265,9 +269,7 @@ def upload_photo(lid: int, file: UploadFile):
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing not found")
 
-    # Ensure photos directory exists
-    photos_base = os.path.join(os.path.dirname(os.path.dirname(__file__)), "photos")
-    os.makedirs(photos_base, exist_ok=True)
+    photos_base = photos_dir
 
     # Save file with unique name
     ext = os.path.splitext(file.filename or "photo.jpg")[1] or ".jpg"

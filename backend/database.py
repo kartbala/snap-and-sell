@@ -1,9 +1,13 @@
 import os
 import sqlite3
 
-DEFAULT_DB_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "data", "snap_and_sell.db"
-)
+PERSIST_DIR = "/app/persist"
+if os.path.isdir(PERSIST_DIR):
+    _data_dir = os.path.join(PERSIST_DIR, "data")
+else:
+    _data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+os.makedirs(_data_dir, exist_ok=True)
+DEFAULT_DB_PATH = os.path.join(_data_dir, "snap_and_sell.db")
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS listings (
