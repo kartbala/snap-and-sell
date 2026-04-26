@@ -197,7 +197,7 @@ class TestEmptyStoreScenario:
             client.post("/api/listings", json={"title": f"Draft {i}", "asking_price": 10})
         assert len(client.get("/api/marketplace").json()) == 0
 
-    def test_all_sold_marketplace_empty(self, client):
+    def test_all_sold_still_visible(self, client):
         ids = []
         for i in range(3):
             resp = client.post("/api/listings", json={"title": f"Item {i}", "asking_price": 50})
@@ -205,7 +205,9 @@ class TestEmptyStoreScenario:
         client.post("/api/listings/batch-approve", json={"ids": ids})
         for lid in ids:
             client.put(f"/api/listings/{lid}", json={"status": "sold"})
-        assert len(client.get("/api/marketplace").json()) == 0
+        items = client.get("/api/marketplace").json()
+        assert len(items) == 3
+        assert all(i["status"] == "sold" for i in items)
 
 
 class TestHighVolumeScenario:

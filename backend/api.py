@@ -125,12 +125,14 @@ def _days_remaining(deadline: str | None) -> int:
 
 @app.get("/api/marketplace")
 def marketplace():
-    listings = models.list_listings(status="active", db_path=_get_db_path())
+    active = models.list_listings(status="active", db_path=_get_db_path())
+    sold = models.list_listings(status="sold", db_path=_get_db_path())
+    listings = active + sold
     today = date.today()
     result = []
     for listing in listings:
-        # Skip past-deadline listings
-        if listing.deadline:
+        # Skip past-deadline listings (active only -- sold items always show).
+        if listing.status == "active" and listing.deadline:
             try:
                 dl = date.fromisoformat(listing.deadline)
             except ValueError:

@@ -114,14 +114,20 @@ class TestFullLifecycle:
         lid = resp.json()["id"]
 
         client.post("/api/listings/batch-approve", json={"ids": [lid]})
-        assert len(client.get("/api/marketplace").json()) == 1
+        items = client.get("/api/marketplace").json()
+        assert len(items) == 1
+        assert items[0]["status"] == "active"
 
         client.put(f"/api/listings/{lid}", json={"status": "sold"})
-        assert len(client.get("/api/marketplace").json()) == 0
+        items = client.get("/api/marketplace").json()
+        assert len(items) == 1
+        assert items[0]["status"] == "sold"
 
         # Relist
         client.put(f"/api/listings/{lid}", json={"status": "active"})
-        assert len(client.get("/api/marketplace").json()) == 1
+        items = client.get("/api/marketplace").json()
+        assert len(items) == 1
+        assert items[0]["status"] == "active"
 
     def test_delete_mid_lifecycle(self, client):
         """Delete an active listing with offers."""

@@ -125,13 +125,15 @@ class TestMarketplaceEdgeCases:
         resp = client.get("/api/marketplace")
         assert len(resp.json()) == 0
 
-    def test_marketplace_excludes_sold(self, client):
+    def test_marketplace_includes_sold(self, client):
         resp = client.post("/api/listings", json={"title": "Item", "asking_price": 50})
         lid = resp.json()["id"]
         client.post("/api/listings/batch-approve", json={"ids": [lid]})
         client.put(f"/api/listings/{lid}", json={"status": "sold"})
         resp = client.get("/api/marketplace")
-        assert len(resp.json()) == 0
+        items = resp.json()
+        assert len(items) == 1
+        assert items[0]["status"] == "sold"
 
     def test_marketplace_fields_present(self, client):
         lid = _create_active_listing(client, title="Widget", description="Nice",

@@ -290,10 +290,11 @@ function applyFilterSort(items, filter, sort) {
         return (rank[a.pricing_strategy] ?? 3) - (rank[b.pricing_strategy] ?? 3) || b.asking_price - a.asking_price;
       });
   }
-  const featured = out.filter(i => i._featured);
-  const bottom = out.filter(i => !i._featured && i._bottom);
-  const middle = out.filter(i => !i._featured && !i._bottom);
-  return [...featured, ...middle, ...bottom];
+  const featured = out.filter(i => i._featured && !i._sold);
+  const sold = out.filter(i => i._sold);
+  const bottom = out.filter(i => !i._featured && !i._sold && i._bottom);
+  const middle = out.filter(i => !i._featured && !i._sold && !i._bottom);
+  return [...featured, ...middle, ...bottom, ...sold];
 }
 
 Object.assign(window, {

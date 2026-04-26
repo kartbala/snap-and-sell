@@ -40,6 +40,7 @@ window.SnapAndSell = (function () {
       category: item.category || 'misc',
       _featured: FEATURED_IDS.has(item.id),
       _bottom: BOTTOM_IDS.has(item.id),
+      _sold: item.status === 'sold',
     };
   }
 
