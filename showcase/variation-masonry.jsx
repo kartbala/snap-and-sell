@@ -23,7 +23,7 @@ function StarkMasonry({ items, accent, density, soldOverride, onOpen }) {
 
   return (
     <div style={{ background: '#000', minHeight: '100%', color: '#fff' }}>
-      <Header items={items} accent={accent} title="MOVING SALE" subtitle="STARK MASONRY" />
+      <Header items={items} accent={accent} title="MOVING SALE" />
       <FilterBar items={items} filter={filter} setFilter={setFilter}
         sort={sort} setSort={setSort} accent={accent}
         density={density} setDensity={() => {}} showDensity={false} />

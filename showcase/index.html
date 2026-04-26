@@ -47,25 +47,19 @@
 <body>
 <div id="root"></div>
 
-<script>
-  // Mark this as a standalone page so the Tweaks panel auto-opens
-  // (no Claude Design canvas host driving it via postMessage).
-  window.__SNAP_STANDALONE__ = true;
-</script>
-
 <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
 
 <script>window.__SC_V = '7';</script>
-<script src="data.js?v=11"></script>
-<script type="text/babel" src="tweaks-panel.jsx?v=11"></script>
-<script type="text/babel" src="primitives.jsx?v=11"></script>
-<script type="text/babel" src="layout-chrome.jsx?v=11"></script>
-<script type="text/babel" src="detail-views.jsx?v=11"></script>
-<script type="text/babel" src="variation-editorial.jsx?v=11"></script>
-<script type="text/babel" src="variation-masonry.jsx?v=11"></script>
-<script type="text/babel" src="variation-dossier.jsx?v=11"></script>
+<script src="data.js?v=12"></script>
+<script type="text/babel" src="tweaks-panel.jsx?v=12"></script>
+<script type="text/babel" src="primitives.jsx?v=12"></script>
+<script type="text/babel" src="layout-chrome.jsx?v=12"></script>
+<script type="text/babel" src="detail-views.jsx?v=12"></script>
+<script type="text/babel" src="variation-editorial.jsx?v=12"></script>
+<script type="text/babel" src="variation-masonry.jsx?v=12"></script>
+<script type="text/babel" src="variation-dossier.jsx?v=12"></script>
 
 <script type="text/babel" data-presets="env,react">
 const TWEAK_DEFAULTS = {
@@ -129,51 +123,6 @@ function App() {
     <div className="root">
       <Layout {...layoutProps} />
       {active && <Detail item={active} onClose={() => setActive(null)} accent={t.accent} />}
-
-      <TweaksPanel>
-        <TweakSection label="Layout" />
-        <TweakRadio
-          label="Variation"
-          value={t.layout}
-          options={['masonry', 'editorial', 'dossier']}
-          onChange={v => setTweak('layout', v)}
-        />
-        <TweakRadio
-          label="Density"
-          value={t.density}
-          options={['tight', 'comfy']}
-          onChange={v => setTweak('density', v)}
-        />
-
-        <TweakSection label="State" />
-        <TweakToggle
-          label="Demo: mark 2 items sold"
-          value={t.soldDemo}
-          onChange={v => setTweak('soldDemo', v)}
-        />
-
-        <TweakSection label="Accent" />
-        <TweakColor
-          label="Volt color"
-          value={t.accent}
-          onChange={v => setTweak('accent', v)}
-        />
-        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-          {['#CEFF00', '#FF3366', '#FF6A00', '#FFFFFF'].map(c => (
-            <button
-              key={c}
-              onClick={() => setTweak('accent', c)}
-              aria-label={'set accent ' + c}
-              style={{
-                flex: 1, height: 24, border: '1px solid rgba(0,0,0,0.15)',
-                background: c, cursor: 'pointer', borderRadius: 4,
-                outline: t.accent.toLowerCase() === c.toLowerCase() ? '2px solid #29261b' : 'none',
-                outlineOffset: 1,
-              }}
-            />
-          ))}
-        </div>
-      </TweaksPanel>
     </div>
   );
 }
