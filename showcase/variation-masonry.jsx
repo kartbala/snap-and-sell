@@ -82,7 +82,6 @@ function StarkTile({ item, accent, height, span, hero, sold, onOpen }) {
         display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <HeatTag item={item} accent={accent} />
-          <Countdown item={item} accent={accent} compact />
         </div>
         <span style={{
           fontFamily: 'JetBrains Mono, ui-monospace, monospace',

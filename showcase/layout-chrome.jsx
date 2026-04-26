@@ -2,7 +2,6 @@
 function Header({ items, accent, title, subtitle, terminal }) {
   const now = SnapAndSell.useToday();
   const days = SnapAndSell.daysUntil('2026-06-01', now);
-  const fireCount = items.filter(i => i.pricing_strategy === 'fire_sale').length;
   return (
     <header style={{
       borderBottom: '1px solid #27272a', background: '#000',
@@ -29,9 +28,7 @@ function Header({ items, accent, title, subtitle, terminal }) {
             color: '#888', margin: '14px 0 0', maxWidth: 580, lineHeight: 1.5,
           }}>
             Everything must go before <strong style={{ color: '#fff' }}>June 1, 2026</strong>.
-            {' '}Sabbatical to the Netherlands.{' '}
-            <strong style={{ color: '#fff' }}>Every item is already assembled</strong>{' '}
-            -- no flat-pack, no allen wrenches, no missing screws.
+            {' '}Sabbatical to the Netherlands.
             {' '}Pickup only · SW DC · Cash, Zelle, or Venmo.
           </p>
         </div>
@@ -44,22 +41,8 @@ function Header({ items, accent, title, subtitle, terminal }) {
           <div style={{
             fontFamily: 'Anton, Impact, sans-serif', fontSize: 56, color: accent,
             lineHeight: 0.9, letterSpacing: '-0.01em',
-          }}>{days}D</div>
+          }}>{days} days</div>
           <div style={{ marginTop: 6, color: '#fff' }}>UNTIL JUN 01 / 2026</div>
-          <div style={{
-            marginTop: 14, paddingTop: 12, borderTop: '1px dashed #27272a',
-            display: 'flex', justifyContent: 'space-between',
-          }}>
-            <span>FIRE SALE</span>
-            <span style={{ color: accent }}>{fireCount} / {items.length}</span>
-          </div>
-          <div style={{
-            marginTop: 8,
-            display: 'flex', justifyContent: 'space-between',
-          }}>
-            <span>ASSEMBLED</span>
-            <span style={{ color: accent }}>ALL / {items.length}</span>
-          </div>
         </div>
       </div>
     </header>

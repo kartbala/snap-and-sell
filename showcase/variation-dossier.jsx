@@ -94,7 +94,6 @@ function DossierCard({ item, accent, sold, onOpen }) {
         {/* tags */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
           <HeatTag item={item} accent={accent} />
-          <Countdown item={item} accent={accent} compact />
         </div>
 
         {/* title */}

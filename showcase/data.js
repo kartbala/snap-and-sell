@@ -23,9 +23,9 @@ window.SnapAndSell = (function () {
   const PHOTO_HIDE_IDS = { 3: new Set([3]), 13: new Set([10, 13]), 20: new Set([30]), 21: new Set([43]) };
 
   // Pin a specific server-side photo id to the front (as the visual primary)
-  // when the DB primary flag is wrong. 12 = wide MARIEDAMM/BERGMUND shot.
-  // 44 = Samsung Freestyle hero side-profile.
-  const PHOTO_PIN_FIRST = { 13: 12, 21: 44 };
+  // when the DB primary flag is wrong. 58 = clean wide MARIEDAMM/BERGMUND
+  // shot with all 4 chairs. 44 = Samsung Freestyle hero side-profile.
+  const PHOTO_PIN_FIRST = { 13: 58, 21: 44 };
 
   // Normalize string fields the design assumes are always present.
   // Local dev DB sometimes has nulls; prod has full SW DC values.
@@ -103,9 +103,13 @@ window.SnapAndSell = (function () {
     return CAT_CODE[item.category] || 'ITM';
   }
 
-  // First-line title (before " - " or " — " or first comma).
+  // First-line title. Strips long post-dash trailers ("Bundle - Wi-Fi 64GB + ...")
+  // but preserves short qualifiers like "Set of 2", "Pair", "(2 of 5)".
   function shortTitle(item) {
-    return item.title.split(/\s[-—]\s/)[0].split(',')[0].trim();
+    const t = item.title.trim();
+    const m = t.match(/^(.+?)\s[-—]\s(.+)$/);
+    if (m && m[2].length > 20) return m[1].trim();
+    return t.split(',')[0].trim();
   }
 
   // Pull photos straight from the marketplace response. Absolutize relative

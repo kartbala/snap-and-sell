@@ -61,7 +61,6 @@ function EditorialRow({ item, idx, accent, tight, sold, onOpen }) {
         <div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
             <HeatTag item={item} accent={accent} />
-            <Countdown item={item} accent={accent} compact />
             <span style={{
               fontFamily: 'JetBrains Mono, ui-monospace, monospace',
               fontSize: 12, color: '#666', letterSpacing: '0.14em',
