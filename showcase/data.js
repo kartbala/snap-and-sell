@@ -20,11 +20,12 @@ window.SnapAndSell = (function () {
   // Cross-listing photo cleanup (no DELETE endpoint): listing 13 (kitchen
   // table set) was uploaded with photos that actually show the bar table
   // and the Branch office chair. Hide those server-side photo ids.
-  const PHOTO_HIDE_IDS = { 13: new Set([10, 13]), 20: new Set([30]) };
+  const PHOTO_HIDE_IDS = { 13: new Set([10, 13]), 20: new Set([30]), 21: new Set([43]) };
 
   // Pin a specific server-side photo id to the front (as the visual primary)
   // when the DB primary flag is wrong. 12 = wide MARIEDAMM/BERGMUND shot.
-  const PHOTO_PIN_FIRST = { 13: 12 };
+  // 44 = Samsung Freestyle hero side-profile.
+  const PHOTO_PIN_FIRST = { 13: 12, 21: 44 };
 
   // Normalize string fields the design assumes are always present.
   // Local dev DB sometimes has nulls; prod has full SW DC values.
