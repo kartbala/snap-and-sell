@@ -285,8 +285,9 @@ function applyFilterSort(items, filter, sort) {
       });
   }
   const featured = out.filter(i => i._featured);
-  const rest = out.filter(i => !i._featured);
-  return [...featured, ...rest];
+  const bottom = out.filter(i => !i._featured && i._bottom);
+  const middle = out.filter(i => !i._featured && !i._bottom);
+  return [...featured, ...middle, ...bottom];
 }
 
 Object.assign(window, {
