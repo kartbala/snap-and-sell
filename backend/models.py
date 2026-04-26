@@ -271,6 +271,46 @@ def get_photos(
     return [PhotoResponse(**{**dict(r), "is_primary": bool(r["is_primary"])}) for r in rows]
 
 
+def get_photo(
+    photo_id: int, db_path: str = DEFAULT_DB_PATH
+) -> PhotoResponse | None:
+    conn = get_connection(db_path)
+    row = conn.execute(
+        "SELECT * FROM photos WHERE id = ?", (photo_id,)
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return None
+    return PhotoResponse(**{**dict(row), "is_primary": bool(row["is_primary"])})
+
+
+def delete_photo(
+    photo_id: int, db_path: str = DEFAULT_DB_PATH
+) -> str | None:
+    """Delete photo row by id; returns the file_path so caller can unlink it."""
+    conn = get_connection(db_path)
+    row = conn.execute(
+        "SELECT listing_id, file_path, is_primary FROM photos WHERE id = ?",
+        (photo_id,),
+    ).fetchone()
+    if row is None:
+        conn.close()
+        return None
+    conn.execute("DELETE FROM photos WHERE id = ?", (photo_id,))
+    if row["is_primary"]:
+        promote = conn.execute(
+            "SELECT id FROM photos WHERE listing_id = ? ORDER BY id ASC LIMIT 1",
+            (row["listing_id"],),
+        ).fetchone()
+        if promote is not None:
+            conn.execute(
+                "UPDATE photos SET is_primary = 1 WHERE id = ?", (promote["id"],)
+            )
+    conn.commit()
+    conn.close()
+    return row["file_path"]
+
+
 def create_notification(
     listing_id: int, offer_id: int, notif_type: str = "new_offer",
     db_path: str = DEFAULT_DB_PATH,

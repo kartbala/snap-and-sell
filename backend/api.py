@@ -295,6 +295,22 @@ def list_photos(lid: int):
     return [{"id": p.id, "url": f"/photos/{p.file_path}", "is_primary": p.is_primary} for p in photos]
 
 
+@app.delete("/api/listings/{lid}/photos/{pid}", status_code=204)
+def delete_listing_photo(lid: int, pid: int):
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    existing = models.get_photo(pid, _get_db_path())
+    if existing is None or existing.listing_id != lid:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    file_path = models.delete_photo(pid, _get_db_path())
+    if file_path:
+        try:
+            os.remove(os.path.join(photos_dir, file_path))
+        except FileNotFoundError:
+            pass
+
+
 # --- External Posts ---
 
 @app.get("/api/listings/{lid}/external-posts")
