@@ -17,6 +17,15 @@ window.SnapAndSell = (function () {
   // endpoint and redeploying would wipe the Free-tier DB.
   const PHOTO_PREFER_NEWEST = new Set([3]);
 
+  // Cross-listing photo cleanup (no DELETE endpoint): listing 13 (kitchen
+  // table set) was uploaded with photos that actually show the bar table
+  // and the Branch office chair. Hide those server-side photo ids.
+  const PHOTO_HIDE_IDS = { 13: new Set([10, 13]) };
+
+  // Pin a specific server-side photo id to the front (as the visual primary)
+  // when the DB primary flag is wrong. 12 = wide MARIEDAMM/BERGMUND shot.
+  const PHOTO_PIN_FIRST = { 13: 12 };
+
   // Normalize string fields the design assumes are always present.
   // Local dev DB sometimes has nulls; prod has full SW DC values.
   function normalize(item) {
@@ -68,6 +77,15 @@ window.SnapAndSell = (function () {
     return { min: item.min_price, ask: item.asking_price, pct };
   }
 
+  // Savings vs original retail. Returns null when no original_price on file
+  // or the asking price isn't actually below it.
+  function savingsLine(item) {
+    const orig = Number(item.original_price);
+    const ask = Number(item.asking_price);
+    if (!orig || !ask || ask >= orig) return null;
+    return { orig, ask, pct: Math.round((1 - ask / orig) * 100) };
+  }
+
   // Category short-code for stamps / placeholders.
   const CAT_CODE = {
     furniture: 'FRN',
@@ -95,10 +113,18 @@ window.SnapAndSell = (function () {
   function photosFor(item) {
     const p = item && item.photos;
     if (!Array.isArray(p) || !p.length) return [];
-    // PHOTO_PREFER_NEWEST: API returns photos with primary first; we want the
-    // most-recently-uploaded one (last in the array) to lead.
-    const ordered = item && PHOTO_PREFER_NEWEST.has(item.id) ? [...p].reverse() : p;
-    return ordered.map(x => {
+    // 1. Drop hidden photo ids (cross-listing duplicates).
+    const hide = item && PHOTO_HIDE_IDS[item.id];
+    let kept = hide ? p.filter(x => !(x && hide.has(x.id))) : p;
+    // 2. PHOTO_PREFER_NEWEST: API lists primary first; prefer last-uploaded.
+    if (item && PHOTO_PREFER_NEWEST.has(item.id)) kept = [...kept].reverse();
+    // 3. Pin a specific server-side photo id to position 0 if requested.
+    const pinId = item && PHOTO_PIN_FIRST[item.id];
+    if (pinId != null) {
+      const idx = kept.findIndex(x => x && x.id === pinId);
+      if (idx > 0) kept = [kept[idx], ...kept.slice(0, idx), ...kept.slice(idx + 1)];
+    }
+    return kept.map(x => {
       const url = typeof x === 'string' ? x : (x && x.url) || '';
       if (!url) return null;
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -123,7 +149,7 @@ window.SnapAndSell = (function () {
   }
 
   return {
-    loadListings, daysUntil, heat, offerLine, shortCode, shortTitle,
+    loadListings, daysUntil, heat, offerLine, savingsLine, shortCode, shortTitle,
     money, photosFor, useToday, CAT_CODE,
   };
 })();

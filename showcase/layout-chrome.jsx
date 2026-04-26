@@ -29,8 +29,10 @@ function Header({ items, accent, title, subtitle, terminal }) {
             color: '#888', margin: '14px 0 0', maxWidth: 580, lineHeight: 1.5,
           }}>
             Everything must go before <strong style={{ color: '#fff' }}>June 1, 2026</strong>.
-            {' '}Sabbatical to the Netherlands. Pickup only · SW DC ·
-            {' '}Cash, Zelle, or Venmo.
+            {' '}Sabbatical to the Netherlands.{' '}
+            <strong style={{ color: '#fff' }}>Every item is already assembled</strong>{' '}
+            -- no flat-pack, no allen wrenches, no missing screws.
+            {' '}Pickup only · SW DC · Cash, Zelle, or Venmo.
           </p>
         </div>
         <div style={{
@@ -50,6 +52,13 @@ function Header({ items, accent, title, subtitle, terminal }) {
           }}>
             <span>FIRE SALE</span>
             <span style={{ color: accent }}>{fireCount} / {items.length}</span>
+          </div>
+          <div style={{
+            marginTop: 8,
+            display: 'flex', justifyContent: 'space-between',
+          }}>
+            <span>ASSEMBLED</span>
+            <span style={{ color: accent }}>ALL / {items.length}</span>
           </div>
         </div>
       </div>

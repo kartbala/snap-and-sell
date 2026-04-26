@@ -76,25 +76,70 @@ function Countdown({ item, compact, accent = '#CEFF00' }) {
 // ─── Price block ───────────────────────────────────────────────────────
 function PriceBlock({ item, size = 'md', accent = '#CEFF00' }) {
   const offer = SnapAndSell.offerLine(item);
+  const savings = SnapAndSell.savingsLine(item);
   const isFire = item.pricing_strategy === 'fire_sale';
   const fontSize = size === 'lg' ? 32 : size === 'sm' ? 18 : 22;
+  const metaSize = size === 'lg' ? 14 : 13;
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-      <span style={{
-        fontFamily: 'Anton, Impact, sans-serif',
-        fontSize, lineHeight: 1, color: '#fff', letterSpacing: '-0.01em',
-      }}>
-        {SnapAndSell.money(item.asking_price)}
-      </span>
-      {offer && isFire && (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <span style={{
-          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
-          fontSize: 12, letterSpacing: '0.12em', color: accent,
+          fontFamily: 'Anton, Impact, sans-serif',
+          fontSize, lineHeight: 1, color: '#fff', letterSpacing: '-0.01em',
         }}>
-          OBO ↓ {SnapAndSell.money(offer.min)}
+          {SnapAndSell.money(item.asking_price)}
         </span>
-      )}
+        {savings && (
+          <span style={{
+            fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+            fontSize: metaSize, letterSpacing: '0.06em',
+            color: '#666', textDecoration: 'line-through',
+          }}>
+            {SnapAndSell.money(savings.orig)}
+          </span>
+        )}
+        {savings && (
+          <span style={{
+            fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+            fontSize: metaSize, letterSpacing: '0.12em', fontWeight: 700,
+            color: '#000', background: accent, padding: '2px 7px',
+          }}>
+            {savings.pct}% OFF
+          </span>
+        )}
+        {offer && isFire && (
+          <span style={{
+            fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+            fontSize: 12, letterSpacing: '0.12em', color: accent,
+          }}>
+            OBO ↓ {SnapAndSell.money(offer.min)}
+          </span>
+        )}
+      </div>
     </div>
+  );
+}
+
+// ─── Assembled badge ───────────────────────────────────────────────────
+// Universal selling point: every item is already assembled and in use.
+// No flat-pack, no allen wrenches, no missing screws.
+function AssembledBadge({ size = 'md' }) {
+  const fontSize = size === 'sm' ? 11 : 12;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+      fontSize, letterSpacing: '0.16em', fontWeight: 600,
+      padding: '3px 8px',
+      background: 'transparent', color: '#fff',
+      border: '1px solid #fff',
+      whiteSpace: 'nowrap',
+    }}>
+      <span style={{
+        width: 6, height: 6, background: '#CEFF00', display: 'inline-block',
+      }} />
+      ASSEMBLED
+    </span>
   );
 }
 
@@ -246,5 +291,5 @@ function applyFilterSort(items, filter, sort) {
 
 Object.assign(window, {
   Placeholder, Countdown, PriceBlock, HeatTag, SoldOverlay,
-  ContactCTA, FilterBar, applyFilterSort,
+  ContactCTA, FilterBar, applyFilterSort, AssembledBadge,
 });
