@@ -49,18 +49,68 @@ function Header({ items, accent, title, subtitle, terminal }) {
   );
 }
 
-function Footer({ accent }) {
+function Faq({ accent }) {
+  const qa = [
+    ['How do I buy something?',
+     'Hit the EMAIL SELLER button on the item. It opens a pre-filled email to kartbala@gmail.com with the item name. First buyer with confirmed payment gets it.'],
+    ['How do I pay?',
+     'Venmo, Zelle, or cash, at pickup. No checks. No PayPal goods-and-services. No holds without payment.'],
+    ['Can you deliver?',
+     'No. Pickup is from our unit in SW DC. We will help you to the elevator and lobby. Bring a friend for anything heavy.'],
+    ['Can I reserve something?',
+     'Once you have paid, it is yours. We do not hold items for unpaid promises.'],
+    ['Are prices negotiable?',
+     'Most items, yes. Email an offer with the item name.'],
+    ['Can I see it before I buy?',
+     'Yes, email to schedule a look. Especially worth it for couches, dining tables, and anything with dimensions you need to verify.'],
+    ['Will it fit through my door?',
+     'Every listing shows W x D x H. Measure your hallway and doorways first. The FRIHETEN sectional comes apart into three pieces if needed.'],
+    ['When does the sale end?',
+     'Final pickups by May 30, 2026. Anything unsold is donated.'],
+  ];
   return (
-    <footer style={{
-      borderTop: '1px solid #27272a', padding: '40px 32px',
-      fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 13,
-      color: '#666', letterSpacing: '0.14em',
-      display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+    <section style={{
+      borderTop: '1px solid #27272a', padding: '56px 32px',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      maxWidth: 920, margin: '0 auto', boxSizing: 'border-box',
     }}>
-      <span>EVERYTHING MUST GO · DEADLINE 2026·06·01</span>
-      <span>SW DC · PICKUP ONLY · CASH · ZELLE · VENMO</span>
-    </footer>
+      <div style={{
+        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontSize: 12, color: accent, letterSpacing: '0.22em', marginBottom: 12,
+      }}>HOW THIS WORKS</div>
+      <h2 style={{
+        fontFamily: 'Anton, Impact, sans-serif',
+        fontSize: 'clamp(36px, 5vw, 56px)', lineHeight: 0.9,
+        letterSpacing: '-0.01em', textTransform: 'uppercase',
+        color: '#fff', margin: '0 0 32px',
+      }}>Logistics &amp; FAQ</h2>
+      <dl style={{ margin: 0, color: '#ddd', fontSize: 16, lineHeight: 1.55 }}>
+        {qa.map(([q, a]) => (
+          <div key={q} style={{ marginBottom: 22 }}>
+            <dt style={{ color: '#fff', fontWeight: 700, marginBottom: 4 }}>{q}</dt>
+            <dd style={{ margin: 0, color: '#aaa' }}>{a}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
-Object.assign(window, { Header, Footer });
+function Footer({ accent }) {
+  return (
+    <>
+      <Faq accent={accent} />
+      <footer style={{
+        borderTop: '1px solid #27272a', padding: '40px 32px',
+        fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 13,
+        color: '#666', letterSpacing: '0.14em',
+        display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+      }}>
+        <span>EVERYTHING MUST GO · DEADLINE 2026·06·01</span>
+        <span>SW DC · PICKUP ONLY · CASH · ZELLE · VENMO</span>
+      </footer>
+    </>
+  );
+}
+
+Object.assign(window, { Header, Footer, Faq });

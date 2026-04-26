@@ -181,30 +181,36 @@ function SoldOverlay() {
   );
 }
 
-// ─── Contact CTA (DM to purchase) ──────────────────────────────────────
-function ContactCTA({ item, variant = 'primary', accent = '#CEFF00', onClick }) {
+// ─── Contact CTA (mailto seller) ───────────────────────────────────────
+function ContactCTA({ item, variant = 'primary', accent = '#CEFF00' }) {
   const styles = {
     primary: { background: '#fff', color: '#000', border: 'none' },
     accent: { background: accent, color: '#000', border: 'none' },
     ghost: { background: 'transparent', color: '#fff', border: '1px solid #fff' },
   }[variant];
+  const title = (item && item.title) || 'item';
+  const subject = encodeURIComponent('Snap & Sell: ' + title);
+  const body = encodeURIComponent(
+    'Hi Karthik,\n\nI\'m interested in ' + title + '. Is this still available?\n\nThanks,\n'
+  );
+  const href = 'mailto:kartbala@gmail.com?subject=' + subject + '&body=' + body;
   return (
-    <button
-      onClick={onClick}
+    <a
+      href={href}
       style={{
-        ...styles,
+        ...styles, display: 'block', textAlign: 'center', textDecoration: 'none',
         fontFamily: 'Inter, system-ui, sans-serif',
         fontWeight: 900, fontSize: 13, letterSpacing: '0.14em',
         textTransform: 'uppercase', padding: '14px 22px',
         cursor: 'pointer', borderRadius: 0, width: '100%',
-        transition: 'transform 0.06s',
+        boxSizing: 'border-box', transition: 'transform 0.06s',
       }}
       onMouseDown={e => e.currentTarget.style.transform = 'translateY(1px)'}
       onMouseUp={e => e.currentTarget.style.transform = 'translateY(0)'}
       onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
     >
-      DM TO PURCHASE →
-    </button>
+      EMAIL SELLER →
+    </a>
   );
 }
 
