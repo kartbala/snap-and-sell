@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Moving Sale · Snap & Sell</title>
+<meta name="description" content="Moving sale before Netherlands sabbatical. Pickup only · SW DC · deadline June 1, 2026." />
+<base href="/showcase/" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #000; color: #fff;
+    font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 18px;
+    -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; line-height: 1.5; }
+
+  /* High-vis focus ring (Stargardt-friendly). */
+  *:focus-visible {
+    outline: 3px solid #CEFF00 !important;
+    outline-offset: 3px !important;
+  }
+  button, a, select, [role="button"] { cursor: pointer; }
+
+  @keyframes volt-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes scanline { from { background-position-y: 0; } to { background-position-y: 100%; } }
+
+  select option { background: #000; color: #fff; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0a0a0a; }
+  ::-webkit-scrollbar-thumb { background: #27272a; }
+  ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+  @media (max-width: 720px) {
+    .root { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  // Mark this as a standalone page so the Tweaks panel auto-opens
+  // (no Claude Design canvas host driving it via postMessage).
+  window.__SNAP_STANDALONE__ = true;
+</script>
+
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+<script>window.__SC_V = '7';</script>
+<script src="data.js?v=8"></script>
+<script type="text/babel" src="tweaks-panel.jsx?v=8"></script>
+<script type="text/babel" src="primitives.jsx?v=8"></script>
+<script type="text/babel" src="layout-chrome.jsx?v=8"></script>
+<script type="text/babel" src="detail-views.jsx?v=8"></script>
+<script type="text/babel" src="variation-editorial.jsx?v=8"></script>
+<script type="text/babel" src="variation-masonry.jsx?v=8"></script>
+<script type="text/babel" src="variation-dossier.jsx?v=8"></script>
+
+<script type="text/babel" data-presets="env,react">
+const TWEAK_DEFAULTS = {
+  layout: "masonry",
+  density: "comfy",
+  soldDemo: false,
+  accent: "#CEFF00",
+};
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [items, setItems] = React.useState(null);
+  const [error, setError] = React.useState(null);
+  const [active, setActive] = React.useState(null);
+
+  React.useEffect(() => {
+    SnapAndSell.loadListings()
+      .then(setItems)
+      .catch(e => setError(String(e)));
+  }, []);
+
+  const soldOverride = React.useMemo(() => {
+    if (!t.soldDemo || !items) return {};
+    const ids = items.slice(1, 2).concat(items.slice(4, 5)).map(i => i.id);
+    const o = {};
+    ids.forEach(id => { o[id] = true; });
+    return o;
+  }, [t.soldDemo, items]);
+
+  if (error) {
+    return <div style={{ padding: 40, color: '#fff' }}>
+      Failed to load listings: {error}
+    </div>;
+  }
+  if (!items) {
+    return <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 12,
+      color: '#666', letterSpacing: '0.18em',
+    }}>
+      <span style={{ color: t.accent, marginRight: 10 }}>●</span> LOADING LISTINGS…
+    </div>;
+  }
+
+  const layoutProps = {
+    items, accent: t.accent, density: t.density,
+    soldOverride, onOpen: setActive,
+  };
+  let Layout, Detail;
+  switch (t.layout) {
+    case 'editorial':
+      Layout = EditorialIndex; Detail = DetailEditorial; break;
+    case 'dossier':
+      Layout = DossierGrid; Detail = DetailDossier; break;
+    case 'masonry':
+    default:
+      Layout = StarkMasonry; Detail = DetailStark; break;
+  }
+
+  return (
+    <div className="root">
+      <Layout {...layoutProps} />
+      {active && <Detail item={active} onClose={() => setActive(null)} accent={t.accent} />}
+
+      <TweaksPanel>
+        <TweakSection label="Layout" />
+        <TweakRadio
+          label="Variation"
+          value={t.layout}
+          options={['masonry', 'editorial', 'dossier']}
+          onChange={v => setTweak('layout', v)}
+        />
+        <TweakRadio
+          label="Density"
+          value={t.density}
+          options={['tight', 'comfy']}
+          onChange={v => setTweak('density', v)}
+        />
+
+        <TweakSection label="State" />
+        <TweakToggle
+          label="Demo: mark 2 items sold"
+          value={t.soldDemo}
+          onChange={v => setTweak('soldDemo', v)}
+        />
+
+        <TweakSection label="Accent" />
+        <TweakColor
+          label="Volt color"
+          value={t.accent}
+          onChange={v => setTweak('accent', v)}
+        />
+        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+          {['#CEFF00', '#FF3366', '#FF6A00', '#FFFFFF'].map(c => (
+            <button
+              key={c}
+              onClick={() => setTweak('accent', c)}
+              aria-label={'set accent ' + c}
+              style={{
+                flex: 1, height: 24, border: '1px solid rgba(0,0,0,0.15)',
+                background: c, cursor: 'pointer', borderRadius: 4,
+                outline: t.accent.toLowerCase() === c.toLowerCase() ? '2px solid #29261b' : 'none',
+                outlineOffset: 1,
+              }}
+            />
+          ))}
+        </div>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -314,19 +314,31 @@ def get_stale_external_posts():
 # --- Static file serving (production) ---
 # This must be LAST so it doesn't shadow API routes
 
-frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
-if os.path.isdir(frontend_dist):
-    from starlette.responses import FileResponse
+from starlette.responses import FileResponse
 
+_project_root = os.path.dirname(os.path.dirname(__file__))
+showcase_dir = os.path.join(_project_root, "showcase")
+showcase_index = os.path.join(showcase_dir, "index.html")
+if os.path.isdir(showcase_dir):
+    app.mount("/showcase", StaticFiles(directory=showcase_dir, html=True), name="showcase")
+
+frontend_dist = os.path.join(_project_root, "frontend", "dist")
+if os.path.isdir(frontend_dist) or os.path.isdir(showcase_dir):
     @app.get("/{path:path}")
     def spa_fallback(path: str):
-        """Serve static files if they exist, otherwise SPA fallback to index.html."""
-        # Try to serve the exact file from dist
-        file_path = os.path.join(frontend_dist, path)
-        if path and os.path.isfile(file_path):
-            return FileResponse(file_path)
-        # SPA fallback — serve index.html for all non-API, non-file routes
-        index = os.path.join(frontend_dist, "index.html")
-        if os.path.exists(index):
-            return FileResponse(index)
+        """Public face: showcase. Falls through to legacy SPA dist for non-showcase paths."""
+        # Root → showcase landing
+        if not path and os.path.isfile(showcase_index):
+            return FileResponse(showcase_index)
+        # Legacy SPA dist for everything else (admin, intake, etc.)
+        if os.path.isdir(frontend_dist):
+            file_path = os.path.join(frontend_dist, path)
+            if path and os.path.isfile(file_path):
+                return FileResponse(file_path)
+            index = os.path.join(frontend_dist, "index.html")
+            if os.path.exists(index):
+                return FileResponse(index)
+        # No SPA dist? Fall back to showcase for any unmatched path.
+        if os.path.isfile(showcase_index):
+            return FileResponse(showcase_index)
         raise HTTPException(status_code=404, detail="Not found")

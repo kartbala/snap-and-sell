@@ -2,7 +2,7 @@ services:
   - type: web
     name: snap-and-sell
     runtime: docker
-    plan: free
+    plan: starter
     envVars:
       - key: BASE_URL
         value: https://snap-and-sell.onrender.com
