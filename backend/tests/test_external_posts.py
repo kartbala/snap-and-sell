@@ -1,4 +1,5 @@
 """Tests for external posts CRUD."""
+import os
 import pytest
 from backend.database import init_db
 from backend.models import ListingCreate, create_listing
@@ -12,6 +13,14 @@ def db_path(tmp_path):
     path = str(tmp_path / "test.db")
     init_db(path)
     return path
+
+@pytest.fixture
+def client(db_path):
+    os.environ["DB_PATH"] = db_path
+    from backend.api import app, _get_db_path
+    _get_db_path.cache_clear()
+    from fastapi.testclient import TestClient
+    return TestClient(app)
 
 @pytest.fixture
 def listing_ids(db_path):
@@ -60,3 +69,25 @@ def test_list_by_platform(db_path, listing_ids):
     cl = list_external_posts(listing_id=lid1, platform="craigslist", db_path=db_path)
     assert len(cl) == 1
     assert cl[0]["platform"] == "craigslist"
+
+
+def test_post_endpoint_creates_record(client, db_path, listing_ids):
+    lid1, _ = listing_ids
+    res = client.post(
+        f"/api/listings/{lid1}/external-posts",
+        json={"platform": "craigslist", "url": "https://washingtondc.craigslist.org/doc/bik/d/x/7930640764.html", "last_price_posted": 200.0},
+    )
+    assert res.status_code == 201
+    body = res.json()
+    assert body["platform"] == "craigslist"
+    assert body["last_price_posted"] == 200.0
+    posts = list_external_posts(listing_id=lid1, db_path=db_path)
+    assert len(posts) == 1
+
+
+def test_post_endpoint_404_for_unknown_listing(client):
+    res = client.post(
+        "/api/listings/999999/external-posts",
+        json={"platform": "craigslist"},
+    )
+    assert res.status_code == 404

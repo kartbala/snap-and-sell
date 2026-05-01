@@ -323,6 +323,30 @@ def list_external_posts_for_listing(lid: int):
         raise HTTPException(status_code=404, detail="Listing not found")
     return list_external_posts(listing_id=lid, db_path=_get_db_path())
 
+
+class ExternalPostCreate(BaseModel):
+    platform: str
+    url: str | None = None
+    last_price_posted: float | None = None
+
+
+@app.post("/api/listings/{lid}/external-posts", status_code=201)
+def create_external_post_for_listing(lid: int, data: ExternalPostCreate):
+    from backend.external_posts import create_external_post, list_external_posts
+    listing = models.get_listing(lid, _get_db_path())
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    pid = create_external_post(
+        listing_id=lid,
+        platform=data.platform,
+        url=data.url,
+        last_price_posted=data.last_price_posted,
+        db_path=_get_db_path(),
+    )
+    posts = list_external_posts(listing_id=lid, db_path=_get_db_path())
+    return next(p for p in posts if p["id"] == pid)
+
+
 @app.get("/api/external-posts/stale")
 def get_stale_external_posts():
     from backend.external_posts import get_stale_posts
