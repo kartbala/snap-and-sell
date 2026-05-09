@@ -91,3 +91,18 @@ def test_post_endpoint_404_for_unknown_listing(client):
         json={"platform": "craigslist"},
     )
     assert res.status_code == 404
+
+
+def test_put_status_endpoint_updates(client, db_path, listing_ids):
+    lid1, _ = listing_ids
+    pid = create_external_post(listing_id=lid1, platform="craigslist", db_path=db_path)
+    res = client.put(f"/api/external-posts/{pid}/status", json={"status": "removed"})
+    assert res.status_code == 200
+    assert res.json()["status"] == "removed"
+    posts = list_external_posts(listing_id=lid1, db_path=db_path)
+    assert posts[0]["status"] == "removed"
+
+
+def test_put_status_endpoint_404_for_unknown_post(client):
+    res = client.put("/api/external-posts/999999/status", json={"status": "removed"})
+    assert res.status_code == 404

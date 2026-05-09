@@ -353,6 +353,20 @@ def get_stale_external_posts():
     return get_stale_posts(db_path=_get_db_path())
 
 
+class ExternalPostStatusUpdate(BaseModel):
+    status: str
+
+
+@app.put("/api/external-posts/{pid}/status")
+def update_external_post_status_endpoint(pid: int, data: ExternalPostStatusUpdate):
+    from backend.external_posts import list_external_posts, update_external_post_status
+    changed = update_external_post_status(pid, data.status, db_path=_get_db_path())
+    if not changed:
+        raise HTTPException(status_code=404, detail="External post not found")
+    posts = list_external_posts(db_path=_get_db_path())
+    return next(p for p in posts if p["id"] == pid)
+
+
 # --- Static file serving (production) ---
 # This must be LAST so it doesn't shadow API routes
 
