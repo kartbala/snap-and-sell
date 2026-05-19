@@ -130,7 +130,7 @@ function DetailEditorial({ item, onClose, accent }) {
               marginTop: 10, fontFamily: 'JetBrains Mono, ui-monospace, monospace',
               fontSize: 13, color: '#666', letterSpacing: '0.1em', textAlign: 'center',
             }}>
-              CASH · ZELLE · VENMO  /  PICKUP ONLY · {item.location.toUpperCase()}
+              CASH · ZELLE · VENMO  /  PICKUP ONLY · SW DC
             </div>
           </div>
         </div>
@@ -176,7 +176,7 @@ function DetailStark({ item, onClose, accent }) {
             <span>ID·{String(item.id).padStart(3, '0')}</span>
             <span>{item.category.toUpperCase()}</span>
             <span>COND · {item.condition.toUpperCase()}</span>
-            <span>{item.location.toUpperCase()}</span>
+            <span>SW DC</span>
           </div>
           <h3 style={{
             fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700, fontSize: 18,
@@ -285,7 +285,7 @@ function DetailDossier({ item, onClose, accent }) {
           <DossierRow k="STRATEGY" v={item.pricing_strategy.replace('_', ' ').toUpperCase()} accent={accent} />
           <DossierRow k="CONDITION" v={item.condition.toUpperCase()} accent={accent} />
           <DossierRow k="CATEGORY" v={item.category.toUpperCase()} accent={accent} />
-          <DossierRow k="LOCATION" v={item.location.toUpperCase()} accent={accent} />
+          <DossierRow k="LOCATION" v="SW DC" accent={accent} />
           <DossierRow k="PICKUP" v={item.pickup_type.toUpperCase()} accent={accent} />
           <DossierRow k="DEADLINE" v={item.deadline} accent={accent} />
           <DossierRow k="LISTED" v={(item.created_at || '').slice(0, 10)} accent={accent} />
@@ -325,7 +325,7 @@ function SpecsTable({ item, compact }) {
   const rows = [
     ['Condition', item.condition],
     ['Category', item.category],
-    ['Pickup', item.pickup_type + ' / ' + item.location],
+    ['Pickup', item.pickup_type + ' / SW DC'],
     ['Deadline', item.deadline],
     ['Strategy', item.pricing_strategy.replace('_', ' ')],
   ];

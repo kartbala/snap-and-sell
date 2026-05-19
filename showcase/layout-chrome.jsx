@@ -29,7 +29,7 @@ function Header({ items, accent, title, subtitle, terminal }) {
           }}>
             Everything must go before <strong style={{ color: '#fff' }}>June 1, 2026</strong>.
             {' '}Sabbatical to the Netherlands.
-            {' '}Pickup only · SW DC · Cash, Zelle, or Venmo.
+            {' '}Pickup in SW DC -- address shared after payment. Cash, Zelle, or Venmo.
           </p>
         </div>
         <div style={{
@@ -56,7 +56,7 @@ function Faq({ accent }) {
     ['How do I pay?',
      'Venmo, Zelle, or cash, at pickup. No checks. No PayPal goods-and-services. No holds without payment.'],
     ['Can you deliver?',
-     'No. Pickup is from our unit in SW DC. We will help you to the elevator and lobby. Bring a friend for anything heavy.'],
+     'No. Pickup is in SW DC -- exact address shared after payment. We will help you to the elevator and lobby. Bring a friend for anything heavy.'],
     ['Can I reserve something?',
      'Once you have paid, it is yours. We do not hold items for unpaid promises.'],
     ['Are prices negotiable?',

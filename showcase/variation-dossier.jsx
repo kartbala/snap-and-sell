@@ -138,7 +138,7 @@ function DossierCard({ item, accent, sold, onOpen }) {
           color: '#888', lineHeight: 1.7,
         }}>
           <DRow k="cond" v={item.condition.toUpperCase()} />
-          <DRow k="loc" v={item.location.toUpperCase()} />
+          <DRow k="loc" v="SW DC" />
           <DRow k="pickup" v={item.pickup_type.toUpperCase()} />
         </div>
 
