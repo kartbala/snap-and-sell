@@ -18,7 +18,7 @@ function PhotoCarousel({ item, height = 480 }) {
 
   return (
     <div style={{ position: 'relative', width: '100%', height, background: '#0a0a0a' }}>
-      <Placeholder item={item} tall photo={photos[idx]} label={`${idx + 1} / ${total}`} />
+      <Placeholder item={item} tall photo={photos[idx]} label={`${idx + 1} / ${total}`} fit="contain" />
       {total > 1 && (
         <>
           <button aria-label="previous photo" onClick={() => setIdx((idx - 1 + total) % total)} style={navBtn('left')}>‹</button>

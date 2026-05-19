@@ -3,12 +3,12 @@
 
 // ─── Category-typed striped placeholder ────────────────────────────────
 // Looks intentional, never broken. Volt accent only on a single corner tag.
-function Placeholder({ item, tall, photo, label }) {
+function Placeholder({ item, tall, photo, label, fit = 'cover' }) {
   // If a real photo url was supplied, show it instead.
   if (photo) {
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#0a0a0a' }}>
-        <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.05)' }} />
+        <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: fit, filter: 'contrast(1.05)' }} />
         {label && (
           <div style={{
             position: 'absolute', top: 12, left: 12, color: '#fff',
