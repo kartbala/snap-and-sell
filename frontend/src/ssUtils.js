@@ -17,6 +17,13 @@ export function isUrgent(item) {
   return item.days_remaining != null && item.days_remaining <= 7;
 }
 
+export function retailDiscount(item) {
+  const op = Number(item.original_price);
+  const ap = Number(item.asking_price);
+  if (!op || !ap || op <= ap) return null;
+  return Math.round((1 - ap / op) * 100);
+}
+
 export const SALE_HEADER = {
   title: "Karthik's moving sale",
   blurb: "70 items · DC pickup · ends June 3",

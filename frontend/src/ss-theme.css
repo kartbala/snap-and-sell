@@ -144,6 +144,7 @@ body[data-surface="public"]::before {
 }
 .ss-badge.urgent { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .ss-badge.pickup { background: rgba(255,255,255,0.95); }
+.ss-badge.discount { background: #166534; color: #f4faf6; border-color: transparent; }
 
 /* Pills */
 .ss-pill {

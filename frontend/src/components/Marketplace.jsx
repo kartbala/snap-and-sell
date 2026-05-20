@@ -22,7 +22,11 @@ export default function Marketplace() {
 
   const active = listings.filter((l) => l.status !== "sold");
   const sold = listings.filter((l) => l.status === "sold");
+  const addrRank = (loc) => (loc === "800 4th St SW" ? 0 : 1);
   const sortActive = (a, b) => {
+    const ar = addrRank(a.location);
+    const br = addrRank(b.location);
+    if (ar !== br) return ar - br;
     const ab = a.bulky ? 1 : 0;
     const bb = b.bulky ? 1 : 0;
     if (ab !== bb) return bb - ab;
