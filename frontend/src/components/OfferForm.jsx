@@ -104,7 +104,7 @@ export default function OfferForm({ item }) {
     return (
       <div className="ss-offer-buttons">
         <a href={smsHref(item)} className="ss-btn ss-btn-secondary">
-          <SSIcon name="sms" size={20} stroke={2} /> Text me
+          <SSIcon name="sms" size={20} stroke={2} /> Text Karthik
         </a>
         <button type="button" className="ss-btn ss-btn-primary" onClick={() => setOpen(true)}>
           Make an offer

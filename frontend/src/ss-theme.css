@@ -31,7 +31,7 @@ body[data-surface="public"]::before {
   text-rendering: optimizeLegibility;
 }
 .ss-scope, .ss-scope * { box-sizing: border-box; }
-.ss-scope button { font: inherit; color: inherit; }
+.ss-scope button { font: inherit; }
 .ss-scope a { color: var(--ink); text-decoration: none; }
 .ss-scope :focus-visible { outline: none; box-shadow: var(--focus); border-radius: 4px; }
 .ss-scope h1, .ss-scope h2, .ss-scope h3, .ss-scope h4 {
