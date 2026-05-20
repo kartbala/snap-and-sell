@@ -382,11 +382,8 @@ frontend_dist = os.path.join(_project_root, "frontend", "dist")
 if os.path.isdir(frontend_dist) or os.path.isdir(showcase_dir):
     @app.get("/{path:path}")
     def spa_fallback(path: str):
-        """Public face: showcase. Falls through to legacy SPA dist for non-showcase paths."""
-        # Root → showcase landing
-        if not path and os.path.isfile(showcase_index):
-            return FileResponse(showcase_index)
-        # Legacy SPA dist for everything else (admin, intake, etc.)
+        """Public face: React SPA (the redesign). Showcase remains at /showcase."""
+        # Prefer the React SPA dist for everything (root + sub-routes).
         if os.path.isdir(frontend_dist):
             file_path = os.path.join(frontend_dist, path)
             if path and os.path.isfile(file_path):
@@ -394,7 +391,7 @@ if os.path.isdir(frontend_dist) or os.path.isdir(showcase_dir):
             index = os.path.join(frontend_dist, "index.html")
             if os.path.exists(index):
                 return FileResponse(index)
-        # No SPA dist? Fall back to showcase for any unmatched path.
+        # No SPA dist? Fall back to showcase.
         if os.path.isfile(showcase_index):
             return FileResponse(showcase_index)
         raise HTTPException(status_code=404, detail="Not found")
