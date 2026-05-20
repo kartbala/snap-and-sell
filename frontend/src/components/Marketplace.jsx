@@ -20,9 +20,12 @@ export default function Marketplace() {
     load();
   }, []);
 
-  const count = listings.length;
-  const blurb = count
-    ? `${count} item${count === 1 ? "" : "s"} · DC pickup · ends June 3`
+  const active = listings.filter((l) => l.status !== "sold");
+  const sold = listings.filter((l) => l.status === "sold");
+  const ordered = [...active, ...sold];
+  const count = active.length;
+  const blurb = listings.length
+    ? `${count} available${sold.length ? ` · ${sold.length} sold` : ""} · DC pickup · ends June 3`
     : SALE_HEADER.blurb;
 
   return (
@@ -38,7 +41,7 @@ export default function Marketplace() {
         <div className="ss-empty">Nothing listed right now. Check back soon.</div>
       ) : (
         <div className="ss-grid">
-          {listings.map((listing) => (
+          {ordered.map((listing) => (
             <MarketplaceCard key={listing.id} listing={listing} />
           ))}
         </div>

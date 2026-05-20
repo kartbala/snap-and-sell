@@ -59,34 +59,49 @@ function DesktopGallery({ photos, onZoom }) {
 function DetailBody({ item, desktop = false }) {
   const discounted = isDiscounted(item);
   const urgent = isUrgent(item);
+  const sold = item.status === "sold";
   return (
     <>
       <h1 className="ss-detail-title">{item.title}</h1>
-      <div className="ss-detail-price">
-        <span className="now">{fmtPrice(item.current_price ?? item.asking_price)}</span>
-        {discounted && <span className="was">{fmtPrice(item.asking_price)}</span>}
-        {item.days_remaining != null && (
-          <span className={"deadline" + (urgent ? " urgent" : "")}>
-            ends in {item.days_remaining}d
-          </span>
-        )}
-      </div>
+      {sold ? (
+        <div className="ss-detail-price">
+          <span className="now" style={{ color: "var(--ink-3)" }}>SOLD</span>
+        </div>
+      ) : (
+        <div className="ss-detail-price">
+          <span className="now">{fmtPrice(item.current_price ?? item.asking_price)}</span>
+          {discounted && <span className="was">{fmtPrice(item.asking_price)}</span>}
+          {item.days_remaining != null && (
+            <span className={"deadline" + (urgent ? " urgent" : "")}>
+              ends in {item.days_remaining}d
+            </span>
+          )}
+        </div>
+      )}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {item.condition && <span className="ss-pill">{item.condition} condition</span>}
         {item.category && <span className="ss-pill">{String(item.category).replace(/-/g, " ")}</span>}
       </div>
       {item.description && <p className="ss-desc">{item.description}</p>}
-      <div className="ss-loc">
-        <SSIcon name="pin" size={20} />
-        <span>
-          {item.location || "DC"}
-          {item.pickup_type === "home" ? " · home pickup" : " · public meetup"}
-        </span>
-      </div>
-      <OfferForm item={item} />
-      <p className="ss-paynote">
-        Cash, Zelle, or Venmo on pickup. Meet at a public spot if you prefer — I'll send options.
-      </p>
+      {!sold && (
+        <div className="ss-loc">
+          <SSIcon name="pin" size={20} />
+          <span>
+            {item.location || "DC"}
+            {item.pickup_type === "home" ? " · home pickup" : " · public meetup"}
+          </span>
+        </div>
+      )}
+      {sold ? (
+        <p className="ss-paynote">This one's already gone. Browse the rest of the moving sale.</p>
+      ) : (
+        <>
+          <OfferForm item={item} />
+          <p className="ss-paynote">
+            Cash, Zelle, or Venmo on pickup. Meet at a public spot if you prefer — I'll send options.
+          </p>
+        </>
+      )}
     </>
   );
 }
