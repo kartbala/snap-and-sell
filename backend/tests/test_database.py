@@ -52,7 +52,7 @@ class TestInitDb:
             "asking_price", "min_price", "original_price", "purchase_date",
             "purchase_source", "status", "location", "price_comps", "share_url",
             "deadline", "pricing_strategy", "pickup_type",
-            "created_at", "updated_at",
+            "bulky", "created_at", "updated_at",
         }
         assert expected == columns
         conn.close()

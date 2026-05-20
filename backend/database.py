@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS listings (
     deadline TEXT DEFAULT '2026-06-01',
     pricing_strategy TEXT DEFAULT 'aggressive',
     pickup_type TEXT DEFAULT 'meeting_spot',
+    bulky INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -82,6 +83,7 @@ MIGRATIONS = [
     "ALTER TABLE listings ADD COLUMN deadline TEXT DEFAULT '2026-06-01'",
     "ALTER TABLE listings ADD COLUMN pricing_strategy TEXT DEFAULT 'aggressive'",
     "ALTER TABLE listings ADD COLUMN pickup_type TEXT DEFAULT 'meeting_spot'",
+    "ALTER TABLE listings ADD COLUMN bulky INTEGER NOT NULL DEFAULT 0",
 ]
 
 

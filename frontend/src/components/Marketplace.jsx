@@ -22,7 +22,13 @@ export default function Marketplace() {
 
   const active = listings.filter((l) => l.status !== "sold");
   const sold = listings.filter((l) => l.status === "sold");
-  const ordered = [...active, ...sold];
+  const sortActive = (a, b) => {
+    const ab = a.bulky ? 1 : 0;
+    const bb = b.bulky ? 1 : 0;
+    if (ab !== bb) return bb - ab;
+    return (b.asking_price ?? 0) - (a.asking_price ?? 0);
+  };
+  const ordered = [...active.sort(sortActive), ...sold];
   const count = active.length;
   const blurb = listings.length
     ? `${count} available${sold.length ? ` · ${sold.length} sold` : ""} · DC pickup · ends June 3`
