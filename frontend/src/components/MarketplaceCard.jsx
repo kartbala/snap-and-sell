@@ -37,7 +37,7 @@ export default function MarketplaceCard({ listing }) {
           {fmtPrice(listing.current_price ?? listing.asking_price)}
         </span>
         {discounted && !sold && (
-          <span className="strike">{fmtPrice(listing.asking_price)}</span>
+          <span className="strike">{fmtPrice(listing.original_price)}</span>
         )}
       </div>
     </>

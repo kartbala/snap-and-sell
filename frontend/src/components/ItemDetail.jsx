@@ -70,7 +70,7 @@ function DetailBody({ item, desktop = false }) {
       ) : (
         <div className="ss-detail-price">
           <span className="now">{fmtPrice(item.current_price ?? item.asking_price)}</span>
-          {discounted && <span className="was">{fmtPrice(item.asking_price)}</span>}
+          {discounted && <span className="was">{fmtPrice(item.original_price)}</span>}
           {item.days_remaining != null && (
             <span className={"deadline" + (urgent ? " urgent" : "")}>
               ends in {item.days_remaining}d

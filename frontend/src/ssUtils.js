@@ -5,12 +5,14 @@ export function fmtPrice(n) {
   return `$${num.toFixed(num % 1 ? 2 : 0).replace(/\.00$/, "")}`;
 }
 
+export function todayPrice(item) {
+  return item.current_price ?? item.asking_price;
+}
+
 export function isDiscounted(item) {
-  return (
-    item.asking_price != null &&
-    item.current_price != null &&
-    Number(item.current_price) < Number(item.asking_price)
-  );
+  const op = Number(item.original_price);
+  const tp = Number(todayPrice(item));
+  return Boolean(op) && Boolean(tp) && op > tp;
 }
 
 export function isUrgent(item) {
@@ -19,9 +21,9 @@ export function isUrgent(item) {
 
 export function retailDiscount(item) {
   const op = Number(item.original_price);
-  const ap = Number(item.asking_price);
-  if (!op || !ap || op <= ap) return null;
-  return Math.round((1 - ap / op) * 100);
+  const tp = Number(todayPrice(item));
+  if (!op || !tp || op <= tp) return null;
+  return Math.round((1 - tp / op) * 100);
 }
 
 export const SALE_HEADER = {
