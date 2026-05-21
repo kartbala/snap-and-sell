@@ -41,7 +41,7 @@ export default function Friends() {
   return (
     <div className="ss-scope">
       <header className="ss-topbar">
-        <h1>{SALE_HEADER.title} — friends &amp; family</h1>
+        <h1>Karthik &amp; Ashton — friends &amp; family</h1>
         <p>{blurb}</p>
         <p style={{ marginTop: 8, fontSize: 14, opacity: 0.85 }}>
           See something you want? Text{" "}

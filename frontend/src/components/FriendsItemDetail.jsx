@@ -172,7 +172,7 @@ export default function FriendsItemDetail() {
           <header className="ss-topbar" style={{ padding: "16px 40px" }}>
             <h1 style={{ fontSize: 17 }}>
               <Link to="/friends" style={{ color: "inherit" }}>
-                {SALE_HEADER.title} — friends &amp; family
+                Karthik &amp; Ashton — friends &amp; family
               </Link>
             </h1>
           </header>
