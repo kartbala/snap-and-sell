@@ -88,14 +88,13 @@ class TestFriendsMarketplace:
         items = client.get("/api/friends-marketplace").json()
         assert items == []
 
-    def test_includes_sold_items(self, client):
+    def test_excludes_sold_items(self, client):
         lid = _make_active(client, title="Gone")
         client.post(
             "/api/listings/batch-status", json={"ids": [lid], "status": "sold"}
         )
         items = client.get("/api/friends-marketplace").json()
-        assert len(items) == 1
-        assert items[0]["status"] == "sold"
+        assert items == []
 
     def test_flag_via_update_endpoint(self, client):
         lid = _make_active(client, title="Toggle me")

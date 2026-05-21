@@ -172,13 +172,12 @@ _FRIENDS_STRIP_FIELDS = (
 @app.get("/api/friends-marketplace")
 def friends_marketplace():
     active = models.list_listings(status="active", db_path=_get_db_path())
-    sold = models.list_listings(status="sold", db_path=_get_db_path())
     today = date.today()
     result = []
-    for listing in active + sold:
+    for listing in active:
         if listing.friends_excluded:
             continue
-        if listing.status == "active" and listing.deadline:
+        if listing.deadline:
             try:
                 dl = date.fromisoformat(listing.deadline)
             except ValueError:

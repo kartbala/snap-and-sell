@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import FriendsCard from "./FriendsCard";
 import { SALE_HEADER } from "../ssUtils";
 
+const FRIENDS_DEADLINE = "2026-06-01";
+
+function daysUntil(iso) {
+  const target = new Date(iso + "T00:00:00");
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const ms = target - today;
+  return Math.max(0, Math.ceil(ms / 86400000));
+}
+
 export default function Friends() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,8 +30,6 @@ export default function Friends() {
     load();
   }, []);
 
-  const active = listings.filter((l) => l.status !== "sold");
-  const sold = listings.filter((l) => l.status === "sold");
   const addrRank = (loc) => (loc === "800 4th St SW" ? 0 : 1);
   const sortActive = (a, b) => {
     const ar = addrRank(a.location);
@@ -32,10 +40,13 @@ export default function Friends() {
     if (ab !== bb) return bb - ab;
     return a.title.localeCompare(b.title);
   };
-  const ordered = [...active.sort(sortActive), ...sold];
-  const count = active.length;
+  const ordered = [...listings].sort(sortActive);
+  const count = listings.length;
+  const days = daysUntil(FRIENDS_DEADLINE);
+  const countdown =
+    days === 0 ? "Everything goes today" : `${days} day${days === 1 ? "" : "s"} until June 1`;
   const blurb = listings.length
-    ? `${count} available${sold.length ? ` · ${sold.length} claimed` : ""} · DC pickup · friends & family`
+    ? `${count} available · DC pickup · friends & family`
     : "Friends & family preview";
 
   return (
@@ -43,6 +54,16 @@ export default function Friends() {
       <header className="ss-topbar">
         <h1>Karthik &amp; Ashton — friends &amp; family</h1>
         <p>{blurb}</p>
+        <p
+          style={{
+            marginTop: 8,
+            fontSize: 18,
+            fontWeight: 700,
+            color: days <= 7 ? "var(--accent-coral, #e94560)" : "inherit",
+          }}
+        >
+          {countdown}
+        </p>
         <p style={{ marginTop: 8, fontSize: 14, opacity: 0.85 }}>
           See something you want? Text{" "}
           <a href={`sms:${SALE_HEADER.sms}`}>{SALE_HEADER.smsDisplay}</a> and it's yours.
