@@ -23,6 +23,7 @@ class ListingCreate(BaseModel):
     pricing_strategy: str = "aggressive"
     pickup_type: str = "meeting_spot"
     bulky: bool = False
+    friends_excluded: bool = False
 
 
 class ListingUpdate(BaseModel):
@@ -43,6 +44,7 @@ class ListingUpdate(BaseModel):
     pricing_strategy: str | None = None
     pickup_type: str | None = None
     bulky: bool | None = None
+    friends_excluded: bool | None = None
 
 
 class ListingResponse(BaseModel):
@@ -64,6 +66,7 @@ class ListingResponse(BaseModel):
     pricing_strategy: str | None = None
     pickup_type: str | None = None
     bulky: bool = False
+    friends_excluded: bool = False
     created_at: str
     updated_at: str
 
@@ -114,14 +117,14 @@ def create_listing(data: ListingCreate, db_path: str = DEFAULT_DB_PATH) -> int:
         """INSERT INTO listings (title, description, category, condition,
            asking_price, min_price, original_price, purchase_date,
            purchase_source, location, price_comps, share_url,
-           deadline, pricing_strategy, pickup_type, bulky)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           deadline, pricing_strategy, pickup_type, bulky, friends_excluded)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (data.title, data.description, data.category, data.condition,
          data.asking_price, data.min_price, data.original_price,
          data.purchase_date, data.purchase_source, data.location,
          data.price_comps, data.share_url,
          data.deadline, data.pricing_strategy, data.pickup_type,
-         int(data.bulky)),
+         int(data.bulky), int(data.friends_excluded)),
     )
     conn.commit()
     lid = cursor.lastrowid

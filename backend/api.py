@@ -156,6 +156,44 @@ def marketplace():
     return result
 
 
+# --- Friends Marketplace (price-free variant; excludes flagged items) ---
+
+# Fields removed for friends: prices, deadlines/discounting signals, share, comps.
+_FRIENDS_STRIP_FIELDS = (
+    "asking_price",
+    "min_price",
+    "original_price",
+    "price_comps",
+    "share_url",
+    "pricing_strategy",
+)
+
+
+@app.get("/api/friends-marketplace")
+def friends_marketplace():
+    active = models.list_listings(status="active", db_path=_get_db_path())
+    sold = models.list_listings(status="sold", db_path=_get_db_path())
+    today = date.today()
+    result = []
+    for listing in active + sold:
+        if listing.friends_excluded:
+            continue
+        if listing.status == "active" and listing.deadline:
+            try:
+                dl = date.fromisoformat(listing.deadline)
+            except ValueError:
+                continue
+            if dl < today:
+                continue
+        d = listing.model_dump()
+        for k in _FRIENDS_STRIP_FIELDS:
+            d.pop(k, None)
+        photos = models.get_photos(listing.id, _get_db_path())
+        d["photos"] = [f"/photos/{p.file_path}" for p in photos]
+        result.append(d)
+    return result
+
+
 # --- Meeting Spots ---
 
 @app.get("/api/meeting-spots")

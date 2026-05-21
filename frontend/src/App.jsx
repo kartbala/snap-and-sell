@@ -3,9 +3,16 @@ import { BrowserRouter, Routes, Route, NavLink, useLocation } from "react-router
 import Dashboard from "./components/Dashboard";
 import Marketplace from "./components/Marketplace";
 import ItemDetail from "./components/ItemDetail";
+import Friends from "./components/Friends";
+import FriendsItemDetail from "./components/FriendsItemDetail";
 
 function isPublicPath(pathname) {
-  return pathname === "/" || pathname.startsWith("/item/");
+  return (
+    pathname === "/" ||
+    pathname.startsWith("/item/") ||
+    pathname === "/friends" ||
+    pathname.startsWith("/friends/")
+  );
 }
 
 function BodyTheme() {
@@ -58,6 +65,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Marketplace />} />
         <Route path="/item/:id" element={<ItemDetail />} />
+        <Route path="/friends" element={<Friends />} />
+        <Route path="/friends/item/:id" element={<FriendsItemDetail />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
