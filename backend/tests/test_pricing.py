@@ -25,6 +25,12 @@ class TestHoldStrategy:
 
 
 class TestAggressiveStrategy:
+    @pytest.fixture(autouse=True)
+    def _enable_algo(self, monkeypatch):
+        # These tests exercise the discount engine itself, which is gated off
+        # by default (ALGORITHMIC_PRICING_ENABLED=False); enable it here.
+        monkeypatch.setattr("backend.pricing.ALGORITHMIC_PRICING_ENABLED", True)
+
     def test_4_plus_weeks_no_discount(self):
         result = compute_current_price(
             asking_price=100.0,
@@ -90,6 +96,10 @@ class TestAggressiveStrategy:
 
 
 class TestFireSaleStrategy:
+    @pytest.fixture(autouse=True)
+    def _enable_algo(self, monkeypatch):
+        monkeypatch.setattr("backend.pricing.ALGORITHMIC_PRICING_ENABLED", True)
+
     def test_14_days_out_no_discount(self):
         result = compute_current_price(
             asking_price=100.0,
@@ -138,6 +148,10 @@ class TestFireSaleStrategy:
 
 
 class TestEdgeCases:
+    @pytest.fixture(autouse=True)
+    def _enable_algo(self, monkeypatch):
+        monkeypatch.setattr("backend.pricing.ALGORITHMIC_PRICING_ENABLED", True)
+
     def test_no_asking_price_returns_none(self):
         result = compute_current_price(
             asking_price=None,
@@ -162,5 +176,40 @@ class TestEdgeCases:
             min_price=50.0,
             pricing_strategy="unknown",
             deadline=date.today() + timedelta(days=2),
+        )
+        assert result == 100.0
+
+
+class TestAlgorithmicPricingDisabled:
+    """Default behavior (Karthik, 2026-06-04): no time-based markdowns.
+
+    With ALGORITHMIC_PRICING_ENABLED False (the default), every listing holds at
+    asking_price regardless of strategy or how far past the deadline it is.
+    """
+
+    def test_aggressive_holds_at_asking_when_disabled(self):
+        result = compute_current_price(
+            asking_price=100.0,
+            min_price=50.0,
+            pricing_strategy="aggressive",
+            deadline=date.today() + timedelta(days=2),
+        )
+        assert result == 100.0
+
+    def test_fire_sale_holds_at_asking_when_disabled(self):
+        result = compute_current_price(
+            asking_price=100.0,
+            min_price=None,
+            pricing_strategy="fire_sale",
+            deadline=date.today(),
+        )
+        assert result == 100.0
+
+    def test_past_deadline_holds_at_asking_when_disabled(self):
+        result = compute_current_price(
+            asking_price=100.0,
+            min_price=None,
+            pricing_strategy="aggressive",
+            deadline=date.today() - timedelta(days=30),
         )
         assert result == 100.0
