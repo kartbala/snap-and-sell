@@ -149,7 +149,7 @@ def marketplace():
             pricing_strategy=listing.pricing_strategy or "aggressive",
             deadline=date.fromisoformat(listing.deadline) if listing.deadline else today,
         )
-        d["current_price"] = max(int(cp / 10 + 0.5) * 10, 10) if cp else cp
+        d["current_price"] = cp
         photos = models.get_photos(listing.id, _get_db_path())
         d["photos"] = [f"/photos/{p.file_path}" for p in photos]
         result.append(d)
