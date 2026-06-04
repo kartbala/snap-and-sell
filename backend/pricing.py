@@ -2,6 +2,12 @@
 from __future__ import annotations
 from datetime import date
 
+# Master switch for time-based algorithmic discounting.
+# When False, listings hold at asking_price and no countdown markdown is applied
+# (Karthik, 2026-06-04: prices must stay static). Flip to True to re-enable the
+# aggressive/fire_sale strategies below.
+ALGORITHMIC_PRICING_ENABLED = False
+
 
 def compute_current_price(
     asking_price: float | None,
@@ -13,9 +19,13 @@ def compute_current_price(
 
     Returns None if asking_price is None.
     Never drops below min_price (if set).
+    When ALGORITHMIC_PRICING_ENABLED is False, always returns asking_price.
     """
     if asking_price is None:
         return None
+
+    if not ALGORITHMIC_PRICING_ENABLED:
+        return round(asking_price, 2)
 
     days_left = (deadline - date.today()).days
 
