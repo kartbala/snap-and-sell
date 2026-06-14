@@ -22,15 +22,22 @@ export default function Marketplace() {
 
   const active = listings.filter((l) => l.status !== "sold");
   const sold = listings.filter((l) => l.status === "sold");
-  const addrRank = (loc) => (loc === "800 4th St SW" ? 0 : 1);
+  // "Our place" sits above Ashton's mom's place (700 7th St SW).
+  const addrRank = (loc) => (loc === "700 7th St SW" ? 1 : 0);
+  const ts = (l) => l.created_at || "";
+  // Order top-to-bottom: new items first, then our place above mom's place,
+  // then bulky above small, then newest first (so old stock like the bikes sinks).
   const sortActive = (a, b) => {
+    const an = a.is_new ? 0 : 1;
+    const bn = b.is_new ? 0 : 1;
+    if (an !== bn) return an - bn;
     const ar = addrRank(a.location);
     const br = addrRank(b.location);
     if (ar !== br) return ar - br;
-    const ab = a.bulky ? 1 : 0;
-    const bb = b.bulky ? 1 : 0;
-    if (ab !== bb) return bb - ab;
-    return (b.asking_price ?? 0) - (a.asking_price ?? 0);
+    const ab = a.bulky ? 0 : 1;
+    const bb = b.bulky ? 0 : 1;
+    if (ab !== bb) return ab - bb;
+    return ts(b).localeCompare(ts(a));
   };
   const ordered = [...active.sort(sortActive), ...sold];
   const count = active.length;

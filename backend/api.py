@@ -152,8 +152,47 @@ def marketplace():
         d["current_price"] = cp
         photos = models.get_photos(listing.id, _get_db_path())
         d["photos"] = [f"/photos/{p.file_path}" for p in photos]
+        # Mark items added within the last 2 days as "new" (for badge + top placement).
+        d["is_new"] = _is_new(listing.created_at)
         result.append(d)
+    result.sort(key=_marketplace_sort_key)
     return result
+
+
+# How recent a listing must be to count as "new" (top bucket + badge).
+_NEW_WINDOW_DAYS = 2
+# Location whose items sink below everything else at "our place" (but above sold).
+_SECONDARY_LOCATION = "700 7th St SW"  # Ashton's mom's place
+
+
+def _is_new(created_at: str | None) -> bool:
+    """True if the listing was added within the last _NEW_WINDOW_DAYS days."""
+    if not created_at:
+        return False
+    try:
+        created = datetime.fromisoformat(created_at).date()
+    except ValueError:
+        return False
+    return created >= date.today() - timedelta(days=_NEW_WINDOW_DAYS)
+
+
+def _marketplace_sort_key(d: dict):
+    """Merchandising order, top of page to bottom:
+
+    1. Sold items pinned to the absolute bottom.
+    2. New items (added in the last 2 days) bubble to the top.
+    3. "Our place" (800 4th St SW / SW DC) above Ashton's mom's (700 7th St SW).
+    4. Bulky items above smaller items.
+    5. Newest first within each tier (so old stock -- e.g. the bikes -- sinks).
+    """
+    is_sold = 1 if d.get("status") == "sold" else 0
+    is_new = 0 if d.get("is_new") else 1
+    is_secondary = 1 if d.get("location") == _SECONDARY_LOCATION else 0
+    not_bulky = 0 if d.get("bulky") else 1
+    # Newer = higher: sort ascending on a reversed timestamp string.
+    created = d.get("created_at") or ""
+    newest_first = tuple(-ord(c) for c in created)
+    return (is_sold, is_new, is_secondary, not_bulky, newest_first)
 
 
 # --- Friends Marketplace (price-free variant; excludes flagged items) ---

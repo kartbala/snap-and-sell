@@ -17,6 +17,9 @@ export default function MarketplaceCard({ listing }) {
           <div style={{ color: "var(--ink-3)", fontSize: 12 }}>no photo</div>
         )}
         <div className="badges">
+          {!sold && listing.is_new && (
+            <span className="ss-badge ss-badge--new">New</span>
+          )}
           {!sold && offRetail != null && (
             <span className="ss-badge discount">{offRetail}% off</span>
           )}
