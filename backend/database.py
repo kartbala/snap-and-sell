@@ -77,6 +77,24 @@ CREATE TABLE IF NOT EXISTS external_posts (
     last_price_posted REAL,
     FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
 );
+
+-- Lightweight click/view analytics. listing_id is nullable (page-level events
+-- like a marketplace view aren't tied to one listing) and intentionally has NO
+-- foreign key: events outlive the listings they reference so the snapshot
+-- history stays intact after a listing is sold and deleted. No IP/PII stored --
+-- session_id is a random client token for funnel dedup, not an identity.
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id INTEGER,
+    event_type TEXT NOT NULL,
+    target TEXT,
+    referrer TEXT,
+    session_id TEXT,
+    user_agent TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_events_listing ON events(listing_id);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type);
 """
 
 

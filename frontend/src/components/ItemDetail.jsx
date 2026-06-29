@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import SSIcon from "./SSIcon";
 import OfferForm from "./OfferForm";
 import Lightbox from "./Lightbox";
-import { fmtPrice, isDiscounted, isUrgent, SALE_HEADER } from "../ssUtils";
+import { fmtPrice, isDiscounted, isUrgent, SALE_HEADER, track } from "../ssUtils";
 
 function MobileCarousel({ photos, onZoom }) {
   const [active, setActive] = useState(0);
@@ -143,6 +143,7 @@ export default function ItemDetail() {
           return;
         }
         setItem(found);
+        track("view", { listingId: found.id });
       } catch {
         setMissing(true);
       } finally {
@@ -195,6 +196,7 @@ export default function ItemDetail() {
                 onZoom={(i) => {
                   setLbIndex(i);
                   setLbOpen(true);
+                  track("photo_open", { listingId: item.id });
                 }}
               />
             )}
@@ -216,6 +218,7 @@ export default function ItemDetail() {
               onZoom={(i) => {
                 setLbIndex(i);
                 setLbOpen(true);
+                track("photo_open", { listingId: item.id });
               }}
             />
           )}

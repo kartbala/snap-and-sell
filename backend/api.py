@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, date
 from functools import lru_cache
 import shutil
 import uuid
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -442,6 +442,56 @@ def update_external_post_status_endpoint(pid: int, data: ExternalPostStatusUpdat
         raise HTTPException(status_code=404, detail="External post not found")
     posts = list_external_posts(db_path=_get_db_path())
     return next(p for p in posts if p["id"] == pid)
+
+
+# --- Events (click/view analytics) ---
+
+class EventCreate(BaseModel):
+    event_type: str
+    listing_id: int | None = None
+    target: str | None = None
+    session_id: str | None = None
+
+
+@app.post("/api/events", status_code=201)
+def create_event(data: EventCreate, request: Request):
+    from backend.events import record_event
+
+    # referrer + user-agent come from headers, never the client body, so the
+    # beacon stays a one-liner and clients can't spoof these fields freely.
+    ua = request.headers.get("user-agent")
+    referrer = request.headers.get("referer")
+    eid = record_event(
+        event_type=data.event_type,
+        listing_id=data.listing_id,
+        target=data.target,
+        referrer=referrer,
+        session_id=data.session_id,
+        user_agent=ua,
+        db_path=_get_db_path(),
+    )
+    return {"id": eid}
+
+
+@app.get("/api/events/summary")
+def events_summary():
+    """Cumulative, PII-free event counts -- the nightly snapshot source."""
+    from backend.events import event_summary
+
+    rows = event_summary(_get_db_path())
+    return {
+        "captured_at": datetime.now().isoformat(timespec="seconds"),
+        "totals": _events_totals(rows),
+        "by_listing": rows,
+    }
+
+
+def _events_totals(rows: list[dict]) -> dict[str, int]:
+    """Roll per-(listing, type) rows up to one count per event type."""
+    totals: dict[str, int] = {}
+    for r in rows:
+        totals[r["event_type"]] = totals.get(r["event_type"], 0) + r["count"]
+    return totals
 
 
 # --- Static file serving (production) ---
