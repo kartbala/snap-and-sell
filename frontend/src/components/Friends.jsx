@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import FriendsCard from "./FriendsCard";
-import { SALE_HEADER } from "../ssUtils";
+import { SALE_HEADER, track } from "../ssUtils";
 
 const FRIENDS_DEADLINE = "2026-06-01";
 
@@ -17,6 +17,7 @@ export default function Friends() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    track("marketplace_view", { target: "friends" });
     const load = async () => {
       try {
         const res = await fetch("/api/friends-marketplace");

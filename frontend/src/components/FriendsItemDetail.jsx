@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import SSIcon from "./SSIcon";
 import Lightbox from "./Lightbox";
-import { SALE_HEADER } from "../ssUtils";
+import { SALE_HEADER, track } from "../ssUtils";
 
 function MobileCarousel({ photos, onZoom }) {
   const [active, setActive] = useState(0);
@@ -83,6 +83,7 @@ function DetailBody({ item }) {
             className="btn btn-primary"
             href={`sms:${SALE_HEADER.sms}?&body=${smsBody}`}
             style={{ display: "inline-block", marginTop: 16 }}
+            onClick={() => track("contact_click", { listingId: item.id, target: "sms_friends" })}
           >
             Text to claim
           </a>
@@ -132,6 +133,7 @@ export default function FriendsItemDetail() {
           return;
         }
         setItem(found);
+        track("view", { listingId: found.id, target: "friends" });
       } catch {
         setMissing(true);
       } finally {
@@ -183,6 +185,7 @@ export default function FriendsItemDetail() {
                 onZoom={(i) => {
                   setLbIndex(i);
                   setLbOpen(true);
+                  track("photo_open", { listingId: item.id, target: "friends" });
                 }}
               />
             )}
@@ -204,6 +207,7 @@ export default function FriendsItemDetail() {
               onZoom={(i) => {
                 setLbIndex(i);
                 setLbOpen(true);
+                track("photo_open", { listingId: item.id, target: "friends" });
               }}
             />
           )}

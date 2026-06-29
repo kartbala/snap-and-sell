@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import MarketplaceCard from "./MarketplaceCard";
-import { SALE_HEADER } from "../ssUtils";
+import { SALE_HEADER, track } from "../ssUtils";
 
 export default function Marketplace() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    track("marketplace_view");
     const load = async () => {
       try {
         const res = await fetch("/api/marketplace");
